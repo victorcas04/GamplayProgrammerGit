@@ -1,0 +1,3 @@
+C:\Users\victo\Desktop\GamplayProgrammer\Source\GamplayProgrammer\GamplayProgrammer.Build.cs
+C:\Users\victo\Desktop\GamplayProgrammer\Source\GamplayProgrammer.Target.cs
+C:\Users\victo\Desktop\GamplayProgrammer\Source\GamplayProgrammerEditor.Target.cs

@@ -1,0 +1,6 @@
+﻿  Creating makefile for GamplayProgrammerEditor (ini files are newer than makefile)
+  Parsing headers for GamplayProgrammerEditor
+    Running UnrealHeaderTool "C:\Users\victo\Desktop\GamplayProgrammer\GamplayProgrammer.uproject" "C:\Users\victo\Desktop\GamplayProgrammer\Intermediate\Build\Win64\GamplayProgrammerEditor\Development\GamplayProgrammerEditor.uhtmanifest" -LogCmds="loginit warning, logexit warning, logdatabase error" -Unattended -WarningsAsErrors -installed
+  Reflection code generated for GamplayProgrammerEditor in 5,2246561 seconds
+  Target is up to date
+  Total execution time: 6,66 seconds
