@@ -12,7 +12,7 @@ UCLASS(config=Game)
 class AGamplayProgrammerCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
+		
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	class USkeletalMeshComponent* Mesh1P;
