@@ -11,6 +11,7 @@ UINTERFACE(MinimalAPI)
 class UIHealth : public UInterface
 {
 	GENERATED_BODY()
+
 };
 
 /**
@@ -22,7 +23,13 @@ class GAMPLAYPROGRAMMER_API IIHealth
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	void LoseHealth(int ammount);
-	void GainHealth(int ammount);
-	void Die();
+	//
+	UFUNCTION(BlueprintNativeEvent)
+		void ILoseHealth(int ammount);
+	//
+	UFUNCTION(BlueprintNativeEvent)
+		void IGainHealth(int ammount);
+	//
+	UFUNCTION(BlueprintNativeEvent)
+		void IDie();
 };
