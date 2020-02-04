@@ -7,7 +7,7 @@
  - WASD:         movement
  - SPACE:        jump
  - LEFT SHIFT:   sprint
- - LEFT CTRL:    crouch
+ - LEFT CTRL:    crouch or slide (while running)
 
 ##### SHOOTPLAY
  - R:            reload
