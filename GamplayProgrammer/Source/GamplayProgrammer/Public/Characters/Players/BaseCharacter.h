@@ -4,65 +4,69 @@
 
 #include "CoreMinimal.h"
 #include "IHealth.h"
+// include for timelines
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "BaseCharacter.generated.h"
 
 class UCharacterMovementComponent;
 
-USTRUCT(Blueprintable)
+USTRUCT()
 struct FCharacterProperties
 {
 	GENERATED_BODY()
+
+public:
 	//
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "10"), Category = "Health")
-		int mMaxHealth = 1;
+	UPROPERTY(EditAnywhere, DisplayName = "Max Health", meta = (ClampMin = "0", ClampMax = "10", Category = "Health"))
+		int mMaxHealth = 3;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Health")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Health", meta = (Category = "Health"))
 		int mCurrHealth;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Running", Category = "Movement")
 		bool bIsRunning = false;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Crouching", Category = "Movement")
 		bool bIsCrouching = false;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Sliding", Category = "Movement")
 		bool bIsSliding = false;
 	//
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "60"), Category = "Movement")
-		float mSlidingTime = 2.0f;
+	UPROPERTY(EditAnywhere, DisplayName = "Max Sliding Time", meta = (ClampMin = "0", ClampMax = "8"), Category = "Movement")
+		float mMaxSlidingTime = 2.0f;
 	//
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "1000"), Category = "Movement | MovementSpeed")
+	UPROPERTY(EditAnywhere, DisplayName = "Default Speed", meta = (ClampMin = "0", ClampMax = "1000"), Category = "Movement | MovementSpeed")
 		float mDefaultSpeed = 600.0f;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Movement | MovementSpeed")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Speed", Category = "Movement | MovementSpeed")
 		float mCurrSpeed;
 	// > number = > speed when sprinting
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "1", ClampMax = "10"), Category = "Movement | MovementSpeed | Multipliers")
+	UPROPERTY(EditAnywhere, DisplayName = "Mux Run Speed", meta = (ClampMin = "1", ClampMax = "10"), Category = "Movement | MovementSpeed | Multipliers")
 		float mRunSpeedMux = 2.0f;
 	// > number = > slow when crouching
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "1"), Category = "Movement | MovementSpeed | Multipliers")
-		float mCrouchSpeedMux = 0.7f;
+	UPROPERTY(EditAnywhere, DisplayName = "Mux Crouch Speed", meta = (ClampMin = "0", ClampMax = "1"), Category = "Movement | MovementSpeed | Multipliers")
+		float mCrouchSpeedMux = 0.6f;
 	// > number = > slow when zooming in
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "1"), Category = "Movement | MovementSpeed | Multipliers")
-		float mZoomInSpeedMux = 0.1f;
+	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn Speed", meta = (ClampMin = "0", ClampMax = "1"), Category = "Movement | MovementSpeed | Multipliers")
+		float mZoomInSpeedMux = 0.2f;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is ZoomingIn", Category = "Weapon")
 		bool bIsZoomingIn = false;
 	//
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "100"), Category = "Weapon")
+	UPROPERTY(EditAnywhere, DisplayName = "Max Ammo", meta = (ClampMin = "0", ClampMax = "100"), Category = "Weapon")
 		int mMaxAmmo = 10;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo", Category = "Weapon")
 		int mCurrAmmo;
 	//
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Reloading", Category = "Weapon")
 		bool bIsReloading = false;
 	//
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "10"), Category = "Weapon")
+	UPROPERTY(EditAnywhere, DisplayName = "ReloadTime", meta = (ClampMin = "0", ClampMax = "10"), Category = "Weapon")
 		float mReloadTime = 2.0f;
 	// > number = > zoom
-	UPROPERTY(EditAnywhere, meta = (ClampMin = "0", ClampMax = "0.9"), Category = "Weapon | Multipliers")
+	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn", meta = (ClampMin = "0", ClampMax = "0.9"), Category = "Weapon | Multipliers")
 		float mZoomInMux = 0.4f;
 };
 
@@ -74,6 +78,19 @@ class GAMPLAYPROGRAMMER_API ABaseCharacter : public ACharacter, public IIHealth
 public:
 	// Sets default values for this character's properties
 	ABaseCharacter();
+
+	/** First person camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class UCameraComponent* FirstPersonCameraComponent;
+	/** Pawn mesh: 1st person view (arms; seen only by self) */
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+		class USkeletalMeshComponent* Mesh1P;
+	//
+	UPROPERTY(BlueprintReadOnly)
+		UCharacterMovementComponent* BaseCharacterMovementComponent;
+	// this is public so the design team can modify it on editor
+	UPROPERTY(EditAnywhere, Category = "Movement")
+		UCurveFloat* FloatCurveSlidingDecay;
 
 	// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 	//
@@ -114,10 +131,10 @@ public:
 		bool CheckIsSliding();
 	//
 	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetSlidingTime();
+		float GetMaxSlidingTime();
 	//
 	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetSlidingTime(float newSlidingTime);
+		void SetMaxSlidingTime(float newSlidingTime);
 	// TODO: remove bpcall
 	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
 		void SetDefaultSpeed(float newDefaultSpeed);
@@ -141,7 +158,7 @@ public:
 		float GetZoomInSpeedMux();
 	// TODO: remove bpcall
 	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetIsReloading(bool newIsReloading);
+		void SetIsReloading(bool newIsReloading = true);
 	//
 	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
 		bool CheckIsReloading();
@@ -225,10 +242,19 @@ public:
 		void StopSliding(bool bKeepCrouched = false);
 	//
 	UFUNCTION(BlueprintCallable)
+		void RestartSliding();
+	//
+	UFUNCTION(BlueprintCallable)
 		void ZoomIn();
 	//
 	UFUNCTION(BlueprintCallable)
 		void ZoomOut();
+	//
+	UFUNCTION(BlueprintCallable)
+		void StartReloading();
+	//
+	UFUNCTION(BlueprintCallable)
+		void StopReloading();
 	//////////////////////////////////////////////////////////////////////////
 
 	// BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
@@ -273,6 +299,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	/** Returns Mesh1P subobject **/
+	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+	/** Returns FirstPersonCameraComponent subobject **/
+	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -284,7 +316,22 @@ private:
 	//
 	UFUNCTION()
 		void SetupChProperties();
+
+	// TIMELINES MANAGEMENT //////////////////////////////////////////////////////////////////////////
 	//
 	UPROPERTY()
-		UCharacterMovementComponent* ChMovComp;
+		UTimelineComponent* SlidingDecayTimeline;
+	//
+	UFUNCTION()
+		void SlidingDecayTimelineUpdate(float DeltaTime);
+	//
+	UFUNCTION()
+		void SlidingDecayTimelineCallback(float value);
+	//
+	UFUNCTION()
+		void SlidingDecayTimelineFinishedCallback();
+	//
+	UFUNCTION()
+		void SlidingDecayTimelineSetup();
+	//////////////////////////////////////////////////////////////////////////
 };

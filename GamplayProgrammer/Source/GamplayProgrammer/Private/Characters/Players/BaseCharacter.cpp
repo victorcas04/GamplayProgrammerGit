@@ -1,23 +1,55 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BaseCharacter.h"
+// include for screen messages
+#include "Runtime/Engine/Public/Engine.h"
+// include for timers (delays)
+#include <Engine/World.h>
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
-	ChMovComp = GetCharacterMovement();
+	// Create a CameraComponent	
+	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
+	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
+	Mesh1P->SetOnlyOwnerSee(true);
+	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
+	Mesh1P->bCastDynamicShadow = false;
+	Mesh1P->CastShadow = false;
+	Mesh1P->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
+	Mesh1P->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
+
+	// Setup our character movement component ref
+	BaseCharacterMovementComponent = GetCharacterMovement();
+}
+
+// Called when the game starts or when spawned
+void ABaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
 	SetupChProperties();
+	SlidingDecayTimelineSetup();
 }
 
 void ABaseCharacter::SetupChProperties()
 {
 	SetCurrHealth(GetMaxHealth());
 	SetCurrAmmo(GetMaxAmmo());
+	SetDefaultSpeed(BaseCharacterMovementComponent->MaxWalkSpeed);
+	ResetCrouchSpeed();
 }
+
+// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
 int ABaseCharacter::GetMaxHealth()
 {
@@ -43,7 +75,8 @@ void ABaseCharacter::ChLoseHealth(int ammount)
 	int newHealthTemp = GetCurrHealth() - ammount;
 	FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
 	SetCurrHealth(newHealthTemp);
-	// TODO: play anim or effects of losing health
+	// here should go the call to play anim or effects of losing health
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
 }
 
 void ABaseCharacter::ChGainHealth(int ammount)
@@ -51,7 +84,8 @@ void ABaseCharacter::ChGainHealth(int ammount)
 	int newHealthTemp = GetCurrHealth() + ammount;
 	FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
 	SetCurrHealth(newHealthTemp);
-	// TODO: play anim or effects of gaining health
+	// here should go the call to play anim or effects of gaining health
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health anim...");
 }
 
 void ABaseCharacter::ChDie()
@@ -89,14 +123,14 @@ bool ABaseCharacter::CheckIsSliding()
 	return ChProperties.bIsSliding;
 }
 
-float ABaseCharacter::GetSlidingTime()
+float ABaseCharacter::GetMaxSlidingTime()
 {
-	return ChProperties.mSlidingTime;
+	return ChProperties.mMaxSlidingTime;
 }
 
-void ABaseCharacter::SetSlidingTime(float newSlidingTime)
+void ABaseCharacter::SetMaxSlidingTime(float newSlidingTime)
 {
-	ChProperties.mSlidingTime = newSlidingTime;
+	ChProperties.mMaxSlidingTime = newSlidingTime;
 }
 
 void ABaseCharacter::SetDefaultSpeed(float newDefaultSpeed)
@@ -178,7 +212,8 @@ void ABaseCharacter::ChDecreaseAmmo(int ammount)
 	int newAmmoTemp = GetCurrAmmo() - ammount;
 	FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
 	SetCurrAmmo(newAmmoTemp);
-	// TODO: play anim or effects of decreasing ammo
+	// here should go the call to play anim or effects of decreasing ammo
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "decreasing ammo anim...");
 }
 
 void ABaseCharacter::ChIncreaseAmmo(int ammount)
@@ -186,12 +221,13 @@ void ABaseCharacter::ChIncreaseAmmo(int ammount)
 	int newAmmoTemp = GetCurrAmmo() + ammount;
 	FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
 	SetCurrAmmo(newAmmoTemp);
-	// TODO: play anim or effects of increasing ammo
+	// here should go the call to play anim or effects of increasing ammo
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "increasing ammo anim...");
 }
 
 void ABaseCharacter::ChEmptyAmmo()
 {
-	// TODO: call Reload()
+	StartReloading();
 }
 
 float ABaseCharacter::GetReloadTime()
@@ -214,35 +250,43 @@ void ABaseCharacter::SetZoomInMux(float newZoomInMux)
 	ChProperties.mZoomInMux = newZoomInMux;
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+// SPEED RELATED FUNCTIONS //////////////////////////////////////////////////////////////////////////
+
 void ABaseCharacter::SetWalkSpeedOnZoomIn()
 {
-	ChMovComp->MaxWalkSpeed = GetZoomInSpeedMux() * GetDefaultSpeed();
+	BaseCharacterMovementComponent->MaxWalkSpeed = GetZoomInSpeedMux() * GetDefaultSpeed();
 }
 
 void ABaseCharacter::SetWalkSpeedOnCrouched()
 {
-	ChMovComp->MaxWalkSpeedCrouched = ChMovComp->MaxWalkSpeed;
+	BaseCharacterMovementComponent->MaxWalkSpeedCrouched = BaseCharacterMovementComponent->MaxWalkSpeed;
 }
 
 void ABaseCharacter::SetWalkSpeedOnMux(float mux)
 {
-	ChMovComp->MaxWalkSpeed *= mux;
+	BaseCharacterMovementComponent->MaxWalkSpeed *= mux;
 }
 
 void ABaseCharacter::SetWalkSpeedOnDiv(float div)
 {
-	ChMovComp->MaxWalkSpeed /= div;
+	BaseCharacterMovementComponent->MaxWalkSpeed /= div;
 }
 
 void ABaseCharacter::SetCrouchSpeedOnMux(float mux)
 {
-	ChMovComp->MaxWalkSpeedCrouched *= mux;
+	BaseCharacterMovementComponent->MaxWalkSpeedCrouched *= mux;
 }
 
 void ABaseCharacter::ResetCrouchSpeed()
 {
-	ChMovComp->MaxWalkSpeedCrouched = GetCrouchSpeedMux() * GetDefaultSpeed();
+	BaseCharacterMovementComponent->MaxWalkSpeedCrouched = GetCrouchSpeedMux() * GetDefaultSpeed();
 }
+
+//////////////////////////////////////////////////////////////////////////
+
+// MAIN ACTIONS //////////////////////////////////////////////////////////////////////////
 
 void ABaseCharacter::StartRunning()
 {
@@ -303,6 +347,7 @@ void ABaseCharacter::StartSliding()
 	{
 		StartCrouching();
 		SetIsSliding();
+		SlidingDecayTimeline->PlayFromStart();
 	}
 }
 
@@ -314,9 +359,15 @@ void ABaseCharacter::StopSliding(bool bKeepCrouched)
 		{
 			StopCrouching();
 		}
-		// TODO: restart sliding timeline
+		RestartSliding();
 		SetIsSliding(false);
 	}
+}
+
+void ABaseCharacter::RestartSliding()
+{
+	SlidingDecayTimeline->Stop();
+	ResetCrouchSpeed();
 }
 
 void ABaseCharacter::ZoomIn()
@@ -324,7 +375,9 @@ void ABaseCharacter::ZoomIn()
 	if (CheckCanZoomIn())
 	{
 		SetIsZoomingIn();
+		// first we set the walk speed while zomming
 		SetWalkSpeedOnZoomIn();
+		// then we set the rest of the walk speed multipliers
 		if (CheckIsRunning())
 		{
 			SetWalkSpeedOnMux(GetRunSpeedMux());
@@ -334,9 +387,7 @@ void ABaseCharacter::ZoomIn()
 			SetWalkSpeedOnMux(GetCrouchSpeedMux());
 			SetWalkSpeedOnCrouched();
 		}
-		// TODO: get fov from camera
-		float FOV = 90;
-		FOV *= (1 - GetZoomInMux());
+		FirstPersonCameraComponent->FieldOfView *= (1 - GetZoomInMux());
 	}
 }
 
@@ -344,14 +395,40 @@ void ABaseCharacter::ZoomOut()
 {
 	if (CheckCanZoomOut())
 	{
-		SetWalkSpeedOnDiv(GetZoomInMux());
+		SetWalkSpeedOnDiv(GetZoomInSpeedMux());
 		SetWalkSpeedOnCrouched();
-		// TODO: get fov from camera
-		float FOV = 90;
-		FOV /= (1 - GetZoomInMux());
+		FirstPersonCameraComponent->FieldOfView /= (1 - GetZoomInMux());
 		SetIsZoomingIn(false);
 	}
 }
+
+void ABaseCharacter::StartReloading()
+{
+	if (CheckCanStartReloading())
+	{
+		SetIsReloading();
+		ZoomOut();
+		// here should go the call to play anim or effects of reloading
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "reloading...");
+		
+		FTimerHandle ReloadHandle;
+		FTimerDelegate ReloadDelegate;
+		ReloadDelegate.BindUFunction(this, TEXT("StopReloading"));
+		GetWorld()->GetTimerManager().SetTimer(ReloadHandle, ReloadDelegate, GetReloadTime(), false);
+	}
+}
+
+void ABaseCharacter::StopReloading()
+{
+	if (CheckCanStopReloading())
+	{
+		SetIsReloading(false);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
 
 bool ABaseCharacter::CheckCanStartRunning()
 {
@@ -408,17 +485,17 @@ bool ABaseCharacter::CheckCanStopReloading()
 	return CheckIsReloading() && CheckIsAmmoFull();
 }
 
-// Called when the game starts or when spawned
-void ABaseCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-}
+//////////////////////////////////////////////////////////////////////////
 
 // Called every frame
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (CheckIsSliding())
+	{
+		SlidingDecayTimelineUpdate(DeltaTime);
+	}
 }
 
 // Called to bind functionality to input
@@ -428,3 +505,70 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Timelines Management
+//////////////////////////////////////////////////////////////////////////
+
+void ABaseCharacter::SlidingDecayTimelineUpdate(float DeltaTime)
+{
+	if (SlidingDecayTimeline)
+	{
+		SlidingDecayTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
+	}
+}
+
+void ABaseCharacter::SlidingDecayTimelineCallback(float value)
+{
+	// here should go the call to play anim or effects of sliding
+	GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Yellow, "sliding...");
+	SetCrouchSpeedOnMux(value);
+}
+
+void ABaseCharacter::SlidingDecayTimelineFinishedCallback()
+{
+	StopSliding();
+}
+
+void ABaseCharacter::SlidingDecayTimelineSetup()
+{
+	if (FloatCurveSlidingDecay)
+	{
+		UCurveFloat* FloatCurveSlidingTemp = NewObject<UCurveFloat>();
+
+		FOnTimelineFloat OnTimelineCallback;
+		FOnTimelineEventStatic OnTimelineFinishedCallback;
+
+		SlidingDecayTimeline = NewObject<UTimelineComponent>(this, FName("TimelineAnimation"));
+
+		SlidingDecayTimeline->SetLooping(false);
+		//SlidingDecayTimeline->SetPlayRate(.5f);
+
+		// we reasign dynamically the keypoints on the timeline to make it fit the sliding duration //////////////////////////////////////////////////////////////////////////
+		SlidingDecayTimeline->SetTimelineLength(GetMaxSlidingTime());
+
+		float OldTimeBeginTransition; float OldTimeEndTransition;
+		FloatCurveSlidingDecay->FloatCurve.GetTimeRange(OldTimeBeginTransition, OldTimeEndTransition);
+
+		float ratioTemp = GetMaxSlidingTime() / OldTimeEndTransition;
+
+		TArray<FRichCurveKey> CopyOfKeys = FloatCurveSlidingDecay->FloatCurve.GetCopyOfKeys();
+		FloatCurveSlidingDecay->FloatCurve.Reset();
+		for (FRichCurveKey k : CopyOfKeys)
+		{
+			FRichCurveKey key = FRichCurveKey(k.Time * ratioTemp, k.Value);
+			key.InterpMode = k.InterpMode;
+			key.TangentMode = k.TangentMode;
+			FloatCurveSlidingDecay->FloatCurve.AddKey(key.Time, key.Value);
+		}
+		//////////////////////////////////////////////////////////////////////////
+
+		OnTimelineCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineCallback") });
+		SlidingDecayTimeline->AddInterpFloat(FloatCurveSlidingDecay, OnTimelineCallback);
+
+		OnTimelineFinishedCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineFinishedCallback") });
+		SlidingDecayTimeline->SetTimelineFinishedFunc(OnTimelineFinishedCallback);
+
+		SlidingDecayTimeline->RegisterComponent();
+	}
+}
+//////////////////////////////////////////////////////////////////////////
