@@ -38,7 +38,9 @@ void ABaseCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	SetupChProperties();
+	mOriginalFOV = FirstPersonCameraComponent->FieldOfView;
 	SlidingDecayTimelineSetup();
+	ZoomInTimelineSetup();
 }
 
 void ABaseCharacter::SetupChProperties()
@@ -92,7 +94,7 @@ void ABaseCharacter::CustomCharacterLoseHealth(int ammount)
 		int newHealthTemp = GetCurrHealth() - ammount;
 		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
 		SetCurrHealth(newHealthTemp);
-		// here should go the call to play anim or effects of losing health
+		// here should go the call to play the hurt anim
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
 		StartInvulnerability();
 	}
@@ -106,7 +108,7 @@ void ABaseCharacter::CustomCharacterGainHealth(int ammount)
 		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
 		SetCurrHealth(newHealthTemp);
 		// here should go the call to play anim or effects of gaining health
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health anim...");
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health effect...");
 	}
 }
 
@@ -114,8 +116,8 @@ void ABaseCharacter::CustomCharacterDie()
 {
 	if (CheckIsAlive())
 	{
-		// here should go the call to play anim or effects of dying
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "dying...");
+		// here should go the call to play death anim
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "dying anim...");
 
 		// TODO: restart level
 	}
@@ -215,8 +217,6 @@ void ABaseCharacter::DecreaseAmmo(int ammount)
 	int newAmmoTemp = GetCurrAmmo() - ammount;
 	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
 	SetCurrAmmo(newAmmoTemp);
-	// here should go the call to play anim or effects of decreasing ammo
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "decreasing ammo anim...");
 }
 
 void ABaseCharacter::IncreaseAmmo(int ammount)
@@ -224,8 +224,6 @@ void ABaseCharacter::IncreaseAmmo(int ammount)
 	int newAmmoTemp = GetCurrAmmo() + ammount;
 	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
 	SetCurrAmmo(newAmmoTemp);
-	// here should go the call to play anim or effects of increasing ammo
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "increasing ammo anim...");
 }
 
 void ABaseCharacter::RestoreFullAmmo()
@@ -251,6 +249,16 @@ float ABaseCharacter::GetReloadTime()
 void ABaseCharacter::SetReloadTime(float newReloadTime)
 {
 	ChProperties.mReloadTime = newReloadTime;
+}
+
+float ABaseCharacter::GetZoomInDelay()
+{
+	return ChProperties.mZoomInDelay;
+}
+
+void ABaseCharacter::SetZoomInDelay(float newZoomInDelay)
+{
+	ChProperties.mZoomInDelay = newZoomInDelay;
 }
 
 float ABaseCharacter::GetZoomInMux()
@@ -327,6 +335,7 @@ void ABaseCharacter::StopInvulnerability()
 
 void ABaseCharacter::StartRunning()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStartRunning())
 	{
 		StopCrouching();
@@ -341,6 +350,7 @@ void ABaseCharacter::StartRunning()
 
 void ABaseCharacter::StopRunning()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStopRunning())
 	{
 		SetWalkSpeedOnDiv(GetRunSpeedMux());
@@ -351,6 +361,7 @@ void ABaseCharacter::StopRunning()
 
 void ABaseCharacter::StartCrouching()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStartCrouching())
 	{
 		SetIsCrouching();
@@ -367,6 +378,7 @@ void ABaseCharacter::StartCrouching()
 
 void ABaseCharacter::StopCrouching()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStopCrouching())
 	{
 		// we use the standard uncrouch from ACharacter
@@ -380,16 +392,21 @@ void ABaseCharacter::StopCrouching()
 
 void ABaseCharacter::StartSliding()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStartSliding())
 	{
 		StartCrouching();
 		SetIsSliding();
-		SlidingDecayTimeline->PlayFromStart();
+		if (SlidingDecayTimeline)
+		{
+			SlidingDecayTimeline->PlayFromStart();
+		}
 	}
 }
 
 void ABaseCharacter::StopSliding(bool bKeepCrouched)
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStopSliding())
 	{
 		if (!bKeepCrouched)
@@ -403,12 +420,16 @@ void ABaseCharacter::StopSliding(bool bKeepCrouched)
 
 void ABaseCharacter::RestartSliding()
 {
-	SlidingDecayTimeline->Stop();
+	if (SlidingDecayTimeline)
+	{
+		SlidingDecayTimeline->Stop();
+	}
 	ResetCrouchSpeed();
 }
 
 void ABaseCharacter::ZoomIn()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanZoomIn())
 	{
 		SetIsZoomingIn();
@@ -424,29 +445,40 @@ void ABaseCharacter::ZoomIn()
 			SetWalkSpeedOnMux(GetCrouchSpeedMux());
 			SetWalkSpeedOnCrouched();
 		}
-		FirstPersonCameraComponent->FieldOfView *= (1 - GetZoomInMux());
+		if (ZoomInTimeline)
+		{
+			ZoomInTimeline->Play();
+		}
+		// TODO: remove this
+		//FirstPersonCameraComponent->FieldOfView *= (1 - GetZoomInMux());
 	}
 }
 
 void ABaseCharacter::ZoomOut()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanZoomOut())
 	{
 		SetWalkSpeedOnDiv(GetZoomInSpeedMux());
 		SetWalkSpeedOnCrouched();
-		FirstPersonCameraComponent->FieldOfView /= (1 - GetZoomInMux());
+		// TODO: remove this
+		//FirstPersonCameraComponent->FieldOfView /= (1 - GetZoomInMux());
+		if (ZoomInTimeline)
+		{
+			ZoomInTimeline->Reverse();
+		}
 		SetIsZoomingIn(false);
 	}
 }
 
 void ABaseCharacter::StartReloading()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanStartReloading())
 	{
 		SetIsReloading();
 		ZoomOut();
-		// here should go the call to play anim or effects of reloading
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "reloading...");
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "reloading anim...");
 		
 		FTimerHandle ReloadHandle;
 		FTimerDelegate ReloadDelegate;
@@ -457,6 +489,7 @@ void ABaseCharacter::StartReloading()
 
 void ABaseCharacter::StopReloading()
 {
+	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	RestoreFullAmmo();
 	if (CheckCanStopReloading())
 	{
@@ -606,14 +639,14 @@ void ABaseCharacter::SlidingDecayTimelineUpdate(float DeltaTime)
 {
 	if (SlidingDecayTimeline)
 	{
+		mTempDeltaTime = DeltaTime;
 		SlidingDecayTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
 	}
 }
 
 void ABaseCharacter::SlidingDecayTimelineCallback(float value)
 {
-	// here should go the call to play anim or effects of sliding
-	GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Yellow, "sliding...");
+	GEngine->AddOnScreenDebugMessage(-1, mTempDeltaTime, FColor::Yellow, "sliding...");
 	SetCrouchSpeedOnMux(value);
 }
 
@@ -626,17 +659,17 @@ void ABaseCharacter::SlidingDecayTimelineSetup()
 {
 	if (FloatCurveSlidingDecay)
 	{
-		UCurveFloat* FloatCurveSlidingTemp = NewObject<UCurveFloat>();
+		// TODO: remove this
+		//UCurveFloat* FloatCurveSlidingTemp = NewObject<UCurveFloat>();
 
 		FOnTimelineFloat OnTimelineCallback;
 		FOnTimelineEventStatic OnTimelineFinishedCallback;
 
 		SlidingDecayTimeline = NewObject<UTimelineComponent>(this, FName("TimelineAnimation"));
-
 		SlidingDecayTimeline->SetLooping(false);
-		//SlidingDecayTimeline->SetPlayRate(.5f);
 
 		// we reasign dynamically the keypoints on the timeline to make it fit the sliding duration //////////////////////////////////////////////////////////////////////////
+
 		SlidingDecayTimeline->SetTimelineLength(GetMaxSlidingTime());
 
 		float OldTimeBeginTransition; float OldTimeEndTransition;
@@ -653,6 +686,7 @@ void ABaseCharacter::SlidingDecayTimelineSetup()
 			key.TangentMode = k.TangentMode;
 			FloatCurveSlidingDecay->FloatCurve.AddKey(key.Time, key.Value);
 		}
+
 		//////////////////////////////////////////////////////////////////////////
 
 		OnTimelineCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineCallback") });
@@ -662,6 +696,72 @@ void ABaseCharacter::SlidingDecayTimelineSetup()
 		SlidingDecayTimeline->SetTimelineFinishedFunc(OnTimelineFinishedCallback);
 
 		SlidingDecayTimeline->RegisterComponent();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "ERROR: no Sliding Decay Curve assigned.");
+	}
+}
+
+void ABaseCharacter::ZoomInTimelineUpdate(float DeltaTime)
+{
+	if (ZoomInTimeline)
+	{
+		mTempDeltaTime = DeltaTime;
+		ZoomInTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
+	}
+}
+
+void ABaseCharacter::ZoomInTimelineCallback(float value)
+{
+	FirstPersonCameraComponent->FieldOfView = mOriginalFOV * (1 - (GetZoomInMux() * value));
+}
+
+void ABaseCharacter::ZoomInTimelineSetup()
+{
+	if (FloatCurveZoomInDelay)
+	{
+		// TODO: remove this
+		//UCurveFloat* FloatCurveZoomInTemp = NewObject<UCurveFloat>();
+
+		FOnTimelineFloat OnTimelineCallback;
+		FOnTimelineEventStatic OnTimelineFinishedCallback;
+
+		ZoomInTimeline = NewObject<UTimelineComponent>(this, FName("TimelineAnimation"));
+		ZoomInTimeline->SetLooping(false);
+
+		// we reasign dynamically the keypoints on the timeline to make it fit the zoom in delay //////////////////////////////////////////////////////////////////////////
+
+		ZoomInTimeline->SetTimelineLength(GetZoomInDelay());
+
+		if (GetZoomInDelay() > 0.0f)
+		{
+			float OldTimeBeginTransition; float OldTimeEndTransition;
+			FloatCurveZoomInDelay->FloatCurve.GetTimeRange(OldTimeBeginTransition, OldTimeEndTransition);
+
+			float ratioTemp = GetZoomInDelay() / OldTimeEndTransition;
+
+			TArray<FRichCurveKey> CopyOfKeys = FloatCurveZoomInDelay->FloatCurve.GetCopyOfKeys();
+			FloatCurveZoomInDelay->FloatCurve.Reset();
+			for (FRichCurveKey k : CopyOfKeys)
+			{
+				FRichCurveKey key = FRichCurveKey(k.Time * ratioTemp, k.Value);
+				key.InterpMode = k.InterpMode;
+				key.TangentMode = k.TangentMode;
+				FloatCurveZoomInDelay->FloatCurve.AddKey(key.Time, key.Value);
+			}
+		}
+
+		//////////////////////////////////////////////////////////////////////////
+
+		OnTimelineCallback.BindUFunction(this, FName{ TEXT("ZoomInTimelineCallback") });
+		ZoomInTimeline->AddInterpFloat(FloatCurveZoomInDelay, OnTimelineCallback);
+
+		ZoomInTimeline->RegisterComponent();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "ERROR: no ZoomIn Delay Assigned assigned.");
 	}
 }
 //////////////////////////////////////////////////////////////////////////

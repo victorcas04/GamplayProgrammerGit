@@ -68,6 +68,11 @@ public:
 	UPROPERTY(EditAnywhere, DisplayName = "Mux Crouch Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
 		float mCrouchSpeedMux = 0.6f;
 
+	// 0.0 = instant zoom in
+	// 2.0 = it'll take 2 secs to zoom in
+	UPROPERTY(EditAnywhere, DisplayName = "ZoomIn Delay", meta = (ClampMin = "0", ClampMax = "2"))
+		float mZoomInDelay = 0.2f;
+
 	// 0.1 = max slow down when zooming in
 	// 1.0 = no slow down when zooming in
 	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
@@ -122,8 +127,12 @@ public:
 		UCharacterMovementComponent* BaseCharacterMovementComponent;
 
 	// this is public so the design team can modify it on editor
-	UPROPERTY(EditAnywhere, Category = "Movement")
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Sliding Decay Curve"), Category = "Timelines | Movement")
 		UCurveFloat* FloatCurveSlidingDecay;
+
+	// this is public so the design team can modify it on editor
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "ZoomIn Delay Curve"), Category = "Timelines | Weapon")
+		UCurveFloat* FloatCurveZoomInDelay;
 
 	// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
@@ -186,6 +195,14 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		void SetReloadTime(float newReloadTime);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetZoomInDelay();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetZoomInDelay(float newZoomInDelay);
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -342,6 +359,15 @@ protected:
 		FCharacterProperties ChProperties;
 
 private:
+
+	//
+	UPROPERTY()
+		float mTempDeltaTime;
+
+	//
+	UPROPERTY()
+		float mOriginalFOV;
+
 	//
 	UFUNCTION()
 		void SetupChProperties();
@@ -500,6 +526,22 @@ private:
 	//
 	UFUNCTION()
 		void SlidingDecayTimelineSetup();
+
+	//
+	UPROPERTY()
+		UTimelineComponent* ZoomInTimeline;
+
+	//
+	UFUNCTION()
+		void ZoomInTimelineUpdate(float DeltaTime);
+
+	//
+	UFUNCTION()
+		void ZoomInTimelineCallback(float value);
+
+	//
+	UFUNCTION()
+		void ZoomInTimelineSetup();
 
 	//////////////////////////////////////////////////////////////////////////
 };
