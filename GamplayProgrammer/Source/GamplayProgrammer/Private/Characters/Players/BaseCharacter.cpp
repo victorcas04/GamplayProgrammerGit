@@ -51,6 +51,16 @@ void ABaseCharacter::SetupChProperties()
 
 // CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
+float ABaseCharacter::GetInvulnerableTime()
+{
+	return ChProperties.mInvulnerableTime;
+}
+
+void ABaseCharacter::SetInvulnerableTime(float newInvulnerableTime)
+{
+	ChProperties.mInvulnerableTime = newInvulnerableTime;
+}
+
 int ABaseCharacter::GetMaxHealth()
 {
 	return ChProperties.mMaxHealth;
@@ -61,36 +71,54 @@ int ABaseCharacter::GetCurrHealth()
 	return ChProperties.mCurrHealth;
 }
 
+void ABaseCharacter::SetIsInvulnerable(bool newIsInvulnerable)
+{
+	ChProperties.bIsInvulnerable = newIsInvulnerable;
+}
+
 void ABaseCharacter::SetCurrHealth(int newCurrHealth)
 {
 	ChProperties.mCurrHealth = newCurrHealth;
 	if (newCurrHealth == 0)
 	{
-		ChDie();
+		CustomCharacterDie();
 	}
 }
 
-void ABaseCharacter::ChLoseHealth(int ammount)
+void ABaseCharacter::CustomCharacterLoseHealth(int ammount)
 {
-	int newHealthTemp = GetCurrHealth() - ammount;
-	FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
-	SetCurrHealth(newHealthTemp);
-	// here should go the call to play anim or effects of losing health
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
+	if (CheckCanLoseHealth())
+	{
+		int newHealthTemp = GetCurrHealth() - ammount;
+		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
+		SetCurrHealth(newHealthTemp);
+		// here should go the call to play anim or effects of losing health
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
+		StartInvulnerability();
+	}
 }
 
-void ABaseCharacter::ChGainHealth(int ammount)
+void ABaseCharacter::CustomCharacterGainHealth(int ammount)
 {
-	int newHealthTemp = GetCurrHealth() + ammount;
-	FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
-	SetCurrHealth(newHealthTemp);
-	// here should go the call to play anim or effects of gaining health
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health anim...");
+	if (CheckCanGainHealth())
+	{
+		int newHealthTemp = GetCurrHealth() + ammount;
+		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
+		SetCurrHealth(newHealthTemp);
+		// here should go the call to play anim or effects of gaining health
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health anim...");
+	}
 }
 
-void ABaseCharacter::ChDie()
+void ABaseCharacter::CustomCharacterDie()
 {
-	// TODO: restart level or smtg
+	if (CheckIsAlive())
+	{
+		// here should go the call to play anim or effects of dying
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "dying...");
+
+		// TODO: restart level
+	}
 }
 
 void ABaseCharacter::SetIsRunning(bool newIsRunning)
@@ -98,29 +126,14 @@ void ABaseCharacter::SetIsRunning(bool newIsRunning)
 	ChProperties.bIsRunning = newIsRunning;
 }
 
-bool ABaseCharacter::CheckIsRunning()
-{
-	return ChProperties.bIsRunning;
-}
-
 void ABaseCharacter::SetIsCrouching(bool newIsCrouching)
 {
 	ChProperties.bIsCrouching = newIsCrouching;
 }
 
-bool ABaseCharacter::CheckIsCrouching()
-{
-	return ChProperties.bIsCrouching;
-}
-
 void ABaseCharacter::SetIsSliding(bool newIsSliding)
 {
 	ChProperties.bIsSliding = newIsSliding;
-}
-
-bool ABaseCharacter::CheckIsSliding()
-{
-	return ChProperties.bIsSliding;
 }
 
 float ABaseCharacter::GetMaxSlidingTime()
@@ -173,19 +186,9 @@ void ABaseCharacter::SetIsReloading(bool newIsReloading)
 	ChProperties.bIsReloading = newIsReloading;
 }
 
-bool ABaseCharacter::CheckIsReloading()
-{
-	return ChProperties.bIsReloading;
-}
-
 void ABaseCharacter::SetIsZoomingIn(bool newIsZoomingIn)
 {
 	ChProperties.bIsZoomingIn = newIsZoomingIn;
-}
-
-bool ABaseCharacter::CheckIsZoomingIn()
-{
-	return ChProperties.bIsZoomingIn;
 }
 
 int ABaseCharacter::GetMaxAmmo()
@@ -203,29 +206,39 @@ void ABaseCharacter::SetCurrAmmo(int newCurrAmmo)
 	ChProperties.mCurrAmmo = newCurrAmmo;
 	if (newCurrAmmo == 0)
 	{
-		ChEmptyAmmo();
+		DoWhenAmmoIsEmpty();
 	}
 }
 
-void ABaseCharacter::ChDecreaseAmmo(int ammount)
+void ABaseCharacter::DecreaseAmmo(int ammount)
 {
 	int newAmmoTemp = GetCurrAmmo() - ammount;
-	FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
+	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
 	SetCurrAmmo(newAmmoTemp);
 	// here should go the call to play anim or effects of decreasing ammo
 	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "decreasing ammo anim...");
 }
 
-void ABaseCharacter::ChIncreaseAmmo(int ammount)
+void ABaseCharacter::IncreaseAmmo(int ammount)
 {
 	int newAmmoTemp = GetCurrAmmo() + ammount;
-	FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
+	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
 	SetCurrAmmo(newAmmoTemp);
 	// here should go the call to play anim or effects of increasing ammo
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "increasing ammo anim...");
 }
 
-void ABaseCharacter::ChEmptyAmmo()
+void ABaseCharacter::RestoreFullAmmo()
+{
+	IncreaseAmmo(GetMaxAmmo());
+}
+
+void ABaseCharacter::EmptyAmmo()
+{
+	DecreaseAmmo(GetMaxAmmo());
+}
+
+void ABaseCharacter::DoWhenAmmoIsEmpty()
 {
 	StartReloading();
 }
@@ -287,6 +300,30 @@ void ABaseCharacter::ResetCrouchSpeed()
 //////////////////////////////////////////////////////////////////////////
 
 // MAIN ACTIONS //////////////////////////////////////////////////////////////////////////
+
+void ABaseCharacter::StartInvulnerability()
+{
+	if (CheckCanStartInvulnerability())
+	{
+		SetIsInvulnerable();
+
+		// here should go the call to play anim or effects of invulnerability
+		GEngine->AddOnScreenDebugMessage(-1, GetInvulnerableTime(), FColor::Yellow, "INVULNERABLE");
+
+		FTimerHandle InvulnerableHandle;
+		FTimerDelegate InvulnerableDelegate;
+		InvulnerableDelegate.BindUFunction(this, TEXT("StopInvulnerability"));
+		GetWorld()->GetTimerManager().SetTimer(InvulnerableHandle, InvulnerableDelegate, GetInvulnerableTime(), false);
+	}
+}
+
+void ABaseCharacter::StopInvulnerability()
+{
+	if (CheckCanStopInvulnerability())
+	{
+		SetIsInvulnerable(false);
+	}
+}
 
 void ABaseCharacter::StartRunning()
 {
@@ -420,6 +457,7 @@ void ABaseCharacter::StartReloading()
 
 void ABaseCharacter::StopReloading()
 {
+	RestoreFullAmmo();
 	if (CheckCanStopReloading())
 	{
 		SetIsReloading(false);
@@ -429,6 +467,61 @@ void ABaseCharacter::StopReloading()
 //////////////////////////////////////////////////////////////////////////
 
 // BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
+
+bool ABaseCharacter::CheckIsRunning()
+{
+	return ChProperties.bIsRunning;
+}
+
+bool ABaseCharacter::CheckIsCrouching()
+{
+	return ChProperties.bIsCrouching;
+}
+
+bool ABaseCharacter::CheckIsSliding()
+{
+	return ChProperties.bIsSliding;
+}
+
+bool ABaseCharacter::CheckIsReloading()
+{
+	return ChProperties.bIsReloading;
+}
+
+bool ABaseCharacter::CheckIsZoomingIn()
+{
+	return ChProperties.bIsZoomingIn;
+}
+
+bool ABaseCharacter::CheckIsAlive()
+{
+	return ChProperties.mCurrHealth > 0;
+}
+
+bool ABaseCharacter::CheckCanStartInvulnerability()
+{
+	return !CheckIsInvulnerable();
+}
+
+bool ABaseCharacter::CheckCanStopInvulnerability()
+{
+	return CheckIsInvulnerable();
+}
+
+bool ABaseCharacter::CheckIsInvulnerable()
+{
+	return ChProperties.bIsInvulnerable;
+}
+
+bool ABaseCharacter::CheckCanLoseHealth()
+{
+	return CheckIsAlive() && !CheckIsInvulnerable();
+}
+
+bool ABaseCharacter::CheckCanGainHealth()
+{
+	return CheckIsAlive();
+}
 
 bool ABaseCharacter::CheckCanStartRunning()
 {
@@ -477,7 +570,7 @@ bool ABaseCharacter::CheckIsAmmoFull()
 
 bool ABaseCharacter::CheckCanStartReloading()
 {
-	return !CheckIsReloading() && CheckIsAmmoFull();
+	return !CheckIsReloading() && !CheckIsAmmoFull();
 }
 
 bool ABaseCharacter::CheckCanStopReloading()

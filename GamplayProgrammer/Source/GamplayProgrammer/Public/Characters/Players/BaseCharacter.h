@@ -17,56 +17,85 @@ struct FCharacterProperties
 	GENERATED_BODY()
 
 public:
+
 	//
-	UPROPERTY(EditAnywhere, DisplayName = "Max Health", meta = (ClampMin = "0", ClampMax = "10", Category = "Health"))
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Invulnerable")
+		bool bIsInvulnerable = false;
+
+	//
+	UPROPERTY(EditAnywhere, DisplayName = "Invulnerable Time", meta = (ClampMin = "0", ClampMax = "10"))
+		float mInvulnerableTime = 2.0f;
+
+	//
+	UPROPERTY(EditAnywhere, DisplayName = "Max Health", meta = (ClampMin = "0", ClampMax = "10"))
 		int mMaxHealth = 3;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Current Health", meta = (Category = "Health"))
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Health")
 		int mCurrHealth;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Is Running", Category = "Movement")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Running")
 		bool bIsRunning = false;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Is Crouching", Category = "Movement")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Crouching")
 		bool bIsCrouching = false;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Is Sliding", Category = "Movement")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Sliding")
 		bool bIsSliding = false;
+
 	//
-	UPROPERTY(EditAnywhere, DisplayName = "Max Sliding Time", meta = (ClampMin = "0", ClampMax = "8"), Category = "Movement")
+	UPROPERTY(EditAnywhere, DisplayName = "Max Sliding Time", meta = (ClampMin = "0", ClampMax = "8"))
 		float mMaxSlidingTime = 2.0f;
+
 	//
-	UPROPERTY(EditAnywhere, DisplayName = "Default Speed", meta = (ClampMin = "0", ClampMax = "1000"), Category = "Movement | MovementSpeed")
+	UPROPERTY(EditAnywhere, DisplayName = "Default Speed", meta = (ClampMin = "0", ClampMax = "1000"))
 		float mDefaultSpeed = 600.0f;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Current Speed", Category = "Movement | MovementSpeed")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Speed")
 		float mCurrSpeed;
-	// > number = > speed when sprinting
-	UPROPERTY(EditAnywhere, DisplayName = "Mux Run Speed", meta = (ClampMin = "1", ClampMax = "10"), Category = "Movement | MovementSpeed | Multipliers")
+
+	// 1.0 = no extra speed while running
+	// 10.0 = max extra speed while running
+	UPROPERTY(EditAnywhere, DisplayName = "Mux Run Speed", meta = (ClampMin = "1", ClampMax = "10"))
 		float mRunSpeedMux = 2.0f;
-	// > number = > slow when crouching
-	UPROPERTY(EditAnywhere, DisplayName = "Mux Crouch Speed", meta = (ClampMin = "0", ClampMax = "1"), Category = "Movement | MovementSpeed | Multipliers")
+
+	// 0.1 = max slow down when crouching
+	// 1.0 = no slow down when crouching
+	UPROPERTY(EditAnywhere, DisplayName = "Mux Crouch Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
 		float mCrouchSpeedMux = 0.6f;
-	// > number = > slow when zooming in
-	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn Speed", meta = (ClampMin = "0", ClampMax = "1"), Category = "Movement | MovementSpeed | Multipliers")
+
+	// 0.1 = max slow down when zooming in
+	// 1.0 = no slow down when zooming in
+	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
 		float mZoomInSpeedMux = 0.2f;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Is ZoomingIn", Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is ZoomingIn")
 		bool bIsZoomingIn = false;
+
 	//
-	UPROPERTY(EditAnywhere, DisplayName = "Max Ammo", meta = (ClampMin = "0", ClampMax = "100"), Category = "Weapon")
+	UPROPERTY(EditAnywhere, DisplayName = "Max Ammo", meta = (ClampMin = "0", ClampMax = "100"))
 		int mMaxAmmo = 10;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo", Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo")
 		int mCurrAmmo;
+
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Is Reloading", Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Reloading")
 		bool bIsReloading = false;
+
 	//
-	UPROPERTY(EditAnywhere, DisplayName = "ReloadTime", meta = (ClampMin = "0", ClampMax = "10"), Category = "Weapon")
+	UPROPERTY(EditAnywhere, DisplayName = "ReloadTime", meta = (ClampMin = "0", ClampMax = "10"))
 		float mReloadTime = 2.0f;
-	// > number = > zoom
-	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn", meta = (ClampMin = "0", ClampMax = "0.9"), Category = "Weapon | Multipliers")
+
+	// 0.0 = no zoom
+	// 0.9 = max zoom
+	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn", meta = (ClampMin = "0", ClampMax = "0.9"))
 		float mZoomInMux = 0.4f;
 };
 
@@ -76,221 +105,220 @@ class GAMPLAYPROGRAMMER_API ABaseCharacter : public ACharacter, public IIHealth
 	GENERATED_BODY()
 
 public:
+
 	// Sets default values for this character's properties
 	ABaseCharacter();
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FirstPersonCameraComponent;
+
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 		class USkeletalMeshComponent* Mesh1P;
+
 	//
 	UPROPERTY(BlueprintReadOnly)
 		UCharacterMovementComponent* BaseCharacterMovementComponent;
+
 	// this is public so the design team can modify it on editor
 	UPROPERTY(EditAnywhere, Category = "Movement")
 		UCurveFloat* FloatCurveSlidingDecay;
 
 	// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		int GetMaxHealth();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		int GetCurrHealth();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetCurrHealth(int newCurrHealth);
-	// function to be called from the IHealth interface on the blueprint
-	UFUNCTION(BlueprintCallable)
-		void ChLoseHealth(int ammount = 1);
-	// function to be called from the IHealth interface on the blueprint
-	UFUNCTION(BlueprintCallable)
-		void ChGainHealth(int ammount = 1);
-	// function to be called from the IHealth interface on the blueprint
-	UFUNCTION(BlueprintCallable)
-		void ChDie();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetIsRunning(bool newIsRunning = true);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		bool CheckIsRunning();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetIsCrouching(bool newIsCrouching = true);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		bool CheckIsCrouching();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetIsSliding(bool newIsSliding = true);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		bool CheckIsSliding();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetMaxSlidingTime();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetMaxSlidingTime(float newSlidingTime);
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetDefaultSpeed(float newDefaultSpeed);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetDefaultSpeed();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetCurrentSpeed();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetCurrentSpeed(float newSpeed);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetRunSpeedMux();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetCrouchSpeedMux();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetZoomInSpeedMux();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetIsReloading(bool newIsReloading = true);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		bool CheckIsReloading();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetIsZoomingIn(bool newIsZoomingIn = true);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		bool CheckIsZoomingIn();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		int GetMaxAmmo();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		int GetCurrAmmo();
-	// TODO: remove bpcall
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetCurrAmmo(int newCurrAmmo);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void ChDecreaseAmmo(int ammount);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void ChIncreaseAmmo(int ammount);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void ChEmptyAmmo();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetReloadTime();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetReloadTime(float newReloadTime);
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		float GetZoomInMux();
-	//
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetZoomInMux(float newZoomInMux);
-	//////////////////////////////////////////////////////////////////////////
 
-	// SPEED RELATED FUNCTIONS //////////////////////////////////////////////////////////////////////////
-	// need to reset the walk speed before start to multiplying it on the different states of the character
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetWalkSpeedOnZoomIn();
-	// this function equals the crouched with the walk speed because we need to use it after setting the correct walk speed
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetWalkSpeedOnCrouched();
-	// to increase or decrease walk speed with a %
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetWalkSpeedOnMux(float mux);
-	// to restore the walk speed with a %, previously increased or decreased by SetWalkSpeedOnMux
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetWalkSpeedOnDiv(float div);
-	// to increase or decrease crouch speed with a %
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void SetCrouchSpeedOnMux(float mux);
-	// to restore the crouch speed (no need to specify a % since it's gonna be the same al the time)
-	UFUNCTION(BlueprintCallable, meta = (HideSelfPin = true))
-		void ResetCrouchSpeed();
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetInvulnerableTime();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetInvulnerableTime(float newInvulnerableTime);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetMaxHealth();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrHealth();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetMaxSlidingTime();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetMaxSlidingTime(float newSlidingTime);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetDefaultSpeed();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetCurrentSpeed();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetRunSpeedMux();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetCrouchSpeedMux();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetZoomInSpeedMux();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetMaxAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetReloadTime();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetReloadTime(float newReloadTime);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetZoomInMux();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetZoomInMux(float newZoomInMux);
+
 	//////////////////////////////////////////////////////////////////////////
 
 	// MAIN ACTIONS //////////////////////////////////////////////////////////////////////////
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void StartInvulnerability();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void StopInvulnerability();
+
+	// function to be called from the IHealth interface on the blueprint
+	UFUNCTION(BlueprintCallable)
+		void CustomCharacterLoseHealth(int ammount = 1);
+
+	// function to be called from the IHealth interface on the blueprint
+	UFUNCTION(BlueprintCallable)
+		void CustomCharacterGainHealth(int ammount = 1);
+
+	// function to be called from the IHealth interface on the blueprint
+	UFUNCTION(BlueprintCallable)
+		void CustomCharacterDie();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StartRunning();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StopRunning();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StartCrouching();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StopCrouching();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StartSliding();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StopSliding(bool bKeepCrouched = false);
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void RestartSliding();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void ZoomIn();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void ZoomOut();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StartReloading();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		void StopReloading();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void DecreaseAmmo(int ammount);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void IncreaseAmmo(int ammount);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void RestoreFullAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void EmptyAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void DoWhenAmmoIsEmpty();
+
 	//////////////////////////////////////////////////////////////////////////
 
 	// BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStartRunning();
+		bool CheckIsInvulnerable();
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStopRunning();
+		bool CheckIsAlive();
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStartCrouching();
+		bool CheckIsRunning();
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStopCrouching();
+		bool CheckIsCrouching();
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStartSliding();
+		bool CheckIsSliding();
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStopSliding();
-	//
-	UFUNCTION(BlueprintCallable)
-		bool CheckCanZoomIn();
-	//
-	UFUNCTION(BlueprintCallable)
-		bool CheckCanZoomOut();
+		bool CheckIsZoomingIn();
+
 	//
 	UFUNCTION(BlueprintCallable)
 		bool CheckIsAmmoFull();
+
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckCanStartReloading();
-	//
-	UFUNCTION(BlueprintCallable)
-		bool CheckCanStopReloading();
+		bool CheckIsReloading();
+
 	//////////////////////////////////////////////////////////////////////////
 
 	// Called every frame
@@ -308,6 +336,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
 	//
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "Base Character Properties"))
 		FCharacterProperties ChProperties;
@@ -317,21 +346,160 @@ private:
 	UFUNCTION()
 		void SetupChProperties();
 
+	// SETS //////////////////////////////////////////////////////////////////////////
+	// we set this private to avoid problems
+
+	//
+	UFUNCTION()
+		void SetIsInvulnerable(bool newIsInvulnerable = true);
+
+	// 
+	UFUNCTION()
+		void SetCurrHealth(int newCurrHealth);
+
+	// 
+	UFUNCTION()
+		void SetIsRunning(bool newIsRunning = true);
+
+	// 
+	UFUNCTION()
+		void SetIsCrouching(bool newIsCrouching = true);
+
+	// 
+	UFUNCTION()
+		void SetIsSliding(bool newIsSliding = true);
+
+	// 
+	UFUNCTION()
+		void SetIsReloading(bool newIsReloading = true);
+
+	// 
+	UFUNCTION()
+		void SetIsZoomingIn(bool newIsZoomingIn = true);
+
+	// 
+	UFUNCTION()
+		void SetCurrAmmo(int newCurrAmmo);
+
+	//////////////////////////////////////////////////////////////////////////
+
+	// SPEED RELATED FUNCTIONS //////////////////////////////////////////////////////////////////////////
+
+	// we set this private to avoid problems
+	UFUNCTION()
+		void SetDefaultSpeed(float newDefaultSpeed);
+
+	// we set this private to avoid problems
+	UFUNCTION()
+		void SetCurrentSpeed(float newSpeed);
+
+	// need to reset the walk speed before start to multiplying it on the different states of the character
+	UFUNCTION()
+		void SetWalkSpeedOnZoomIn();
+
+	// this function equals the crouched with the walk speed because we need to use it after setting the correct walk speed
+	UFUNCTION()
+		void SetWalkSpeedOnCrouched();
+
+	// to increase or decrease walk speed with a %
+	UFUNCTION()
+		void SetWalkSpeedOnMux(float mux);
+
+	// to restore the walk speed with a %, previously increased or decreased by SetWalkSpeedOnMux
+	UFUNCTION()
+		void SetWalkSpeedOnDiv(float div);
+
+	// to increase or decrease crouch speed with a %
+	UFUNCTION()
+		void SetCrouchSpeedOnMux(float mux);
+
+	// to restore the crouch speed (no need to specify a % since it's gonna be the same al the time)
+	UFUNCTION()
+		void ResetCrouchSpeed();
+
+	//////////////////////////////////////////////////////////////////////////
+
+	// BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
+
+	//
+	UFUNCTION()
+		bool CheckCanStartInvulnerability();
+
+	//
+	UFUNCTION()
+		bool CheckCanStopInvulnerability();
+
+	//
+	UFUNCTION()
+		bool CheckCanLoseHealth();
+
+	//
+	UFUNCTION()
+		bool CheckCanGainHealth();
+
+	//
+	UFUNCTION()
+		bool CheckCanStartRunning();
+
+	//
+	UFUNCTION()
+		bool CheckCanStopRunning();
+
+	//
+	UFUNCTION()
+		bool CheckCanStartCrouching();
+
+	//
+	UFUNCTION()
+		bool CheckCanStopCrouching();
+
+	//
+	UFUNCTION()
+		bool CheckCanStartSliding();
+
+	//
+	UFUNCTION()
+		bool CheckCanStopSliding();
+
+	//
+	UFUNCTION()
+		bool CheckCanZoomIn();
+
+	//
+	UFUNCTION()
+		bool CheckCanZoomOut();
+
+	//
+	UFUNCTION()
+		bool CheckCanStartReloading();
+
+	//
+	UFUNCTION()
+		bool CheckCanStopReloading();
+
+	//////////////////////////////////////////////////////////////////////////
+
 	// TIMELINES MANAGEMENT //////////////////////////////////////////////////////////////////////////
+
 	//
 	UPROPERTY()
 		UTimelineComponent* SlidingDecayTimeline;
+
 	//
 	UFUNCTION()
 		void SlidingDecayTimelineUpdate(float DeltaTime);
+
 	//
 	UFUNCTION()
 		void SlidingDecayTimelineCallback(float value);
+
 	//
 	UFUNCTION()
 		void SlidingDecayTimelineFinishedCallback();
+
 	//
 	UFUNCTION()
 		void SlidingDecayTimelineSetup();
+
 	//////////////////////////////////////////////////////////////////////////
 };

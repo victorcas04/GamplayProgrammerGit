@@ -151,6 +151,9 @@ void AGamplayProgrammerCharacter::OnFire()
 
 					// spawn the projectile at the muzzle
 					World->SpawnActor<AGamplayProgrammerProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+					// we call our function
+					DecreaseAmmo(1);
 				}
 			}
 		}
