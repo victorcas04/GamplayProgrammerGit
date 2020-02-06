@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include <TimerManager.h>
 #include "BaseProjectile.generated.h"
 
 class UStaticMeshComponent;
+class ABaseCharacter;
 
 USTRUCT()
 struct FProjectileProperties
@@ -24,12 +26,32 @@ public:
 		float mLifeTime = 3.0f;
 
 	//
+	UPROPERTY(VisibleAnywhere, DisplayName = "Time of Life Remaining")
+		float mLifeTimeRemaining;
+
+	//
 	UPROPERTY(EditAnywhere, DisplayName = "Fall Off", meta = (ClampMin = "0", ClampMax = "1"))
 		float mFallOff = 0.1f;
 
 	//
 	UPROPERTY(EditAnywhere, DisplayName = "Can Bounce Of Walls")
 		bool bCanBounce = false;
+
+	//
+	UPROPERTY(EditAnywhere, DisplayName = "Max Bounces", meta = (ClampMin = "0", ClampMax = "10", EditCondition = "bCanBounce"))
+		int mMaxBounces = 1;
+
+	//
+	UPROPERTY(VisibleAnywhere, DisplayName = "Curr Bounces")
+		int mCurrBounces;
+
+	// time to add to lifespan after a bounce
+	UPROPERTY(EditAnywhere, DisplayName = "Extra Time Per Bounce", meta = (ClampMin = "0", ClampMax = "5", EditCondition = "bCanBounce"))
+		float mExtraTimePerBounce = 1.0f;
+
+	//
+	UPROPERTY(EditAnywhere, DisplayName = "Can Do Damage To Owner")
+		bool bCanSelfDamage = false;
 
 	//
 	UPROPERTY(EditAnywhere, DisplayName = "Can Step On It")
@@ -61,6 +83,14 @@ public:
 		UStaticMeshComponent* ProjectileMesh;
 
 	//
+	UFUNCTION()
+		void SetBaseChOwner(ABaseCharacter* newBaseChOwner);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		ABaseCharacter* GetBaseChOwner();
+
+	// each implementation must be done in blueprint, so design can iterate over it easily
 	UFUNCTION(BlueprintNativeEvent)
 		void DoWhenDestroyed();
 
@@ -84,6 +114,14 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
+		float GetLifeTimeRemaining();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetLifeTimeRemaining(float newTimeOfLifeRemaining);
+
+	//
+	UFUNCTION(BlueprintCallable)
 		float GetFallOff();
 
 	//
@@ -97,6 +135,34 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		void SetCanBounce(bool newShouldBounce = true);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetMaxBounces();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetMaxBounces(int newMaxBounces = 1);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrBounces();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetExtraTimePerBounce();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetExtraTimePerBounce(float newExtraTimePerBounce = 1);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		bool CheckCanSelfDamage();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetCanSelfDamage(bool newCanSelfDamage = true);
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -142,6 +208,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		class UProjectileMovementComponent* ProjectileMovement;
 
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 	/** called when projectile hits something */
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -162,12 +231,32 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+
+	//
+	UPROPERTY()
+		ABaseCharacter* BaseChOwner;
+
 	//
 	UFUNCTION()
 		void SetupPtProperties();
 
 	//
+	UPROPERTY()
+		FTimerHandle AutoDestroyHandle;
+
+	//
+	FTimerDelegate AutoDestroyDelegate;
+
+	//
+	UFUNCTION()
+		void StartAutodestroyTimer();
+
+	//
 	UFUNCTION()
 		void DestroyByTime();
+
+	//
+	UFUNCTION()
+		void SetCurrBounces(int newCurrBounces = 1);
 };
 

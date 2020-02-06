@@ -1,18 +1,25 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "BaseProjectile.h"
+#include "BaseCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 // include for timers (delays)
 #include <Engine/World.h>
 
+#include "Runtime/Engine/Public/Engine.h"
+
 ABaseProjectile::ABaseProjectile() 
 {
+	PrimaryActorTick.bCanEverTick = false; PrimaryActorTick.bCanEverTick = false;
+
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
+	// set to ignore with pawn so we can walk through the projectiles
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	CollisionComp->OnComponentHit.AddDynamic(this, &ABaseProjectile::OnHit);		// set up a notification for when this component hits something blocking
 
 	// Set as root component
@@ -31,24 +38,27 @@ ABaseProjectile::ABaseProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 }
 
+void ABaseProjectile::SetBaseChOwner(ABaseCharacter* newBaseChOwner)
+{
+	if (newBaseChOwner)
+	{
+		BaseChOwner = newBaseChOwner;
+	}
+}
+
+ABaseCharacter* ABaseProjectile::GetBaseChOwner()
+{
+	return BaseChOwner;
+}
+
 // Called when the game starts or when spawned
 void ABaseProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
 	SetupPtProperties();
-
-	FTimerHandle AutoDestroyHandle;
-	FTimerDelegate AutoDestroyDelegate;
-	AutoDestroyDelegate.BindUFunction(this, TEXT("DestroyByTime"));
-	GetWorld()->GetTimerManager().SetTimer(AutoDestroyHandle, AutoDestroyDelegate, GetLifeTime(), false);
-}
-
-void ABaseProjectile::DestroyByTime()
-{
-	// here should go the call to play anim or effects of autodestroying (explosions)
-	DoWhenDestroyed();
-	Destroy();
+	SetLifeTimeRemaining(GetLifeTime());
+	StartAutodestroyTimer();
 }
 
 void ABaseProjectile::SetupPtProperties()
@@ -61,11 +71,31 @@ void ABaseProjectile::SetupPtProperties()
 	SetCanStepOnIt(CheckCanStepOnIt());
 }
 
-// STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
-
-void ABaseProjectile::DoWhenDestroyed_Implementation()
+void ABaseProjectile::StartAutodestroyTimer()
 {
+	// After cleaning and invalidating a timer we need to rebind it
+	GetWorld()->GetTimerManager().ClearTimer(AutoDestroyHandle);
+	AutoDestroyHandle.Invalidate();
+	AutoDestroyDelegate.BindUFunction(this, TEXT("DestroyByTime"));
+
+	// this debug print should be a icon on the bomb to indicate the time
+	/*
+	FString TimeTillExplosionDebug = "Projectile Explosion in: ";
+	TimeTillExplosionDebug.Append(FString::FromInt(static_cast<int>(GetLifeTimeRemaining())));
+	TimeTillExplosionDebug.Append(" sec.");
+	GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Purple, TimeTillExplosionDebug);
+	*/
+	GetWorld()->GetTimerManager().SetTimer(AutoDestroyHandle, AutoDestroyDelegate, GetLifeTimeRemaining(), false);
 }
+
+void ABaseProjectile::DestroyByTime()
+{
+	// here should go the call to play anim or effects of autodestroying (explosions) -> ON THE BLUEPRINT EVENT
+	DoWhenDestroyed();
+	Destroy();
+}
+
+// STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
 int ABaseProjectile::GetDamage()
 {
@@ -88,6 +118,16 @@ void ABaseProjectile::SetLifeTime(float newTimeOfLife)
 	InitialLifeSpan = newTimeOfLife;
 }
 
+float ABaseProjectile::GetLifeTimeRemaining()
+{
+	return PtProperties.mLifeTimeRemaining;
+}
+
+void ABaseProjectile::SetLifeTimeRemaining(float newTimeOfLifeRemaining)
+{
+	PtProperties.mLifeTimeRemaining = newTimeOfLifeRemaining;
+}
+
 float ABaseProjectile::GetFallOff()
 {
 	return PtProperties.mFallOff;
@@ -101,13 +141,18 @@ void ABaseProjectile::SetFallOff(float newFallOff)
 
 bool ABaseProjectile::CheckCanBounce()
 {
-	return PtProperties.bCanBounce;
+	return PtProperties.bCanBounce && (GetCurrBounces() < GetMaxBounces());
 }
 
 void ABaseProjectile::SetCanBounce(bool newShouldBounce)
 {
 	PtProperties.bCanBounce = newShouldBounce;
 	ProjectileMovement->bShouldBounce = newShouldBounce;
+}
+
+int ABaseProjectile::GetMaxBounces()
+{
+	return PtProperties.mMaxBounces;
 }
 
 bool ABaseProjectile::CheckShouldBeDestroyedOncontact()
@@ -120,9 +165,44 @@ void ABaseProjectile::SetShouldBeDestroyedOncontact(bool newShouldBeDestroyedOnC
 	PtProperties.bShouldBeDestroyedOncontact = newShouldBeDestroyedOnContact;
 }
 
+void ABaseProjectile::SetMaxBounces(int newMaxBounces)
+{
+	PtProperties.mMaxBounces = newMaxBounces;
+}
+
+int ABaseProjectile::GetCurrBounces()
+{
+	return PtProperties.mCurrBounces;
+}
+
+void ABaseProjectile::SetCurrBounces(int newCurrBounces)
+{
+	PtProperties.mCurrBounces = newCurrBounces;
+}
+
+float ABaseProjectile::GetExtraTimePerBounce()
+{
+	return PtProperties.mExtraTimePerBounce;
+}
+
+void ABaseProjectile::SetExtraTimePerBounce(float newExtraTimePerBounce)
+{
+	PtProperties.mExtraTimePerBounce = newExtraTimePerBounce;
+}
+
 bool ABaseProjectile::CheckCanStepOnIt()
 {
 	return PtProperties.bCanStepOnIt;
+}
+
+void ABaseProjectile::SetCanSelfDamage(bool newCanSelfDamage)
+{
+	PtProperties.bCanSelfDamage = newCanSelfDamage;
+}
+
+bool ABaseProjectile::CheckCanSelfDamage()
+{
+	return PtProperties.bCanSelfDamage;
 }
 
 void ABaseProjectile::SetCanStepOnIt(bool newCanStepOnIt)
@@ -167,6 +247,14 @@ void ABaseProjectile::SetProjectileInitSpeed(float newProjectileInitSpeed)
 
 //////////////////////////////////////////////////////////////////////////
 
+// Called every frame
+void ABaseProjectile::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	SetLifeTimeRemaining(GetLifeTimeRemaining() - DeltaTime);
+}
+
 void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
@@ -177,10 +265,21 @@ void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 		}
 
+		if (CheckCanBounce())
+		{
+			SetCurrBounces(GetCurrBounces() + 1);
+			SetLifeTimeRemaining(GetLifeTimeRemaining() + GetExtraTimePerBounce());
+			StartAutodestroyTimer();
+		}
+
 		if (CheckShouldBeDestroyedOncontact())
 		{
 			DoWhenDestroyed();
 			Destroy();
 		}
 	}
+}
+
+void ABaseProjectile::DoWhenDestroyed_Implementation()
+{
 }

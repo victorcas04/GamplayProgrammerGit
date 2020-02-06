@@ -579,7 +579,8 @@ void ABaseCharacter::OnFire()
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 				// spawn the projectile at the muzzle
-				World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				ProjectileSpawned->SetBaseChOwner(this);
 
 				DecreaseAmmo(GetAmmoPerShot());
 			}
