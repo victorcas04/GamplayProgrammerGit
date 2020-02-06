@@ -5,13 +5,26 @@
 #include "Runtime/Engine/Public/Engine.h"
 // include for timers (delays)
 #include <Engine/World.h>
+
+// DEFAULT INCLUDES (UE4) //////////////////////////////////////////////////////////////////////////
+
+#include "BaseProjectile.h"
+#include "Animation/AnimInstance.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/InputSettings.h"
+#include "Kismet/GameplayStatics.h"
+
+//////////////////////////////////////////////////////////////////////////
+
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	//PrimaryActorTick.bCanEverTick = false;
 
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -21,12 +34,33 @@ ABaseCharacter::ABaseCharacter()
 
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
-	Mesh1P->SetOnlyOwnerSee(true);
+	Mesh1P->SetOnlyOwnerSee(false);
 	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
-	Mesh1P->bCastDynamicShadow = false;
-	Mesh1P->CastShadow = false;
+	Mesh1P->bCastDynamicShadow = true;
+	Mesh1P->CastShadow = true;
 	Mesh1P->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
 	Mesh1P->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
+
+	// Set size for collision capsule
+	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+
+	// Create a gun mesh component
+	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	FP_Gun->SetOnlyOwnerSee(true);			// only the owning player will see this mesh
+	FP_Gun->bCastDynamicShadow = false;
+	FP_Gun->CastShadow = false;
+	// FP_Gun->SetupAttachment(Mesh1P, TEXT("GripPoint"));
+	FP_Gun->SetupAttachment(RootComponent);
+
+	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	FP_MuzzleLocation->SetupAttachment(FP_Gun);
+	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+
+	// Default offset from the character location for projectiles to spawn
+	GunOffset = FVector(100.0f, 0.0f, 10.0f);
+
+	// Note: The ProjectileClass and the skeletal mesh/anim blueprints for Mesh1P, FP_Gun, and VR_Gun 
+	// are set in the derived blueprint asset named MyCharacter to avoid direct content references in C++.
 
 	// Setup our character movement component ref
 	BaseCharacterMovementComponent = GetCharacterMovement();
@@ -37,8 +71,14 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
+	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	Mesh1P->SetHiddenInGame(false, true);
+
 	SetupChProperties();
 	mOriginalFOV = FirstPersonCameraComponent->FieldOfView;
+
+	// Timelines setup
 	SlidingDecayTimelineSetup();
 	ZoomInTimelineSetup();
 }
@@ -212,6 +252,16 @@ void ABaseCharacter::SetCurrAmmo(int newCurrAmmo)
 	}
 }
 
+int ABaseCharacter::GetAmmoPerShot()
+{
+	return ChProperties.mAmmoPerShot;
+}
+
+void ABaseCharacter::SetAmmoPerShot(int newAmmoPerShot)
+{
+	ChProperties.mAmmoPerShot = newAmmoPerShot;
+}
+
 void ABaseCharacter::DecreaseAmmo(int ammount)
 {
 	int newAmmoTemp = GetCurrAmmo() - ammount;
@@ -331,6 +381,19 @@ void ABaseCharacter::StopInvulnerability()
 	{
 		SetIsInvulnerable(false);
 	}
+}
+
+void ABaseCharacter::CustomCharacterStartJumping()
+{
+	// here should go the call to play the jumping anim
+	// we use the standard jump from ACharacter
+	Jump();
+}
+
+void ABaseCharacter::CustomCharacterStopJumping()
+{
+	// we use the standard jump from ACharacter
+	StopJumping();
 }
 
 void ABaseCharacter::StartRunning()
@@ -497,6 +560,56 @@ void ABaseCharacter::StopReloading()
 	}
 }
 
+void ABaseCharacter::OnFire()
+{
+	if (!CheckIsReloading())
+	{
+		// try and fire a projectile
+		if (ProjectileClass != NULL)
+		{
+			UWorld* const World = GetWorld();
+			if (World != NULL)
+			{
+				const FRotator SpawnRotation = GetControlRotation();
+				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+				//Set Spawn Collision Handling Override
+				FActorSpawnParameters ActorSpawnParams;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+				// spawn the projectile at the muzzle
+				World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+				DecreaseAmmo(GetAmmoPerShot());
+			}
+
+			// try and play the sound if specified
+			if (FireSound != NULL)
+			{
+				UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+			}
+
+			// try and play a firing animation if specified
+			if (FireAnimation != NULL)
+			{
+				// Get the animation object for the arms mesh
+				UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+				if (AnimInstance != NULL)
+				{
+					AnimInstance->Montage_Play(FireAnimation, 1.f);
+				}
+			}
+		}
+		else
+		{
+			// here should go the call to play the hurt anim
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Projectile Class assigned.");
+		}
+		
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 // BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
@@ -624,16 +737,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 	}
 }
 
-// Called to bind functionality to input
-void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-
-//////////////////////////////////////////////////////////////////////////
-// Timelines Management
-//////////////////////////////////////////////////////////////////////////
+// Timelines Management //////////////////////////////////////////////////////////////////////////
 
 void ABaseCharacter::SlidingDecayTimelineUpdate(float DeltaTime)
 {
@@ -764,4 +868,81 @@ void ABaseCharacter::ZoomInTimelineSetup()
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "ERROR: no ZoomIn Delay Assigned assigned.");
 	}
 }
+//////////////////////////////////////////////////////////////////////////
+
+// CAMERA //////////////////////////////////////////////////////////////////////////
+
+float ABaseCharacter::GetBaseTurnRate()
+{
+	return BaseTurnRate;
+}
+
+void ABaseCharacter::SetBaseTurnRate(float newBaseTurnRate)
+{
+	BaseTurnRate = newBaseTurnRate;
+}
+
+float ABaseCharacter::GetBaseLookUpRate()
+{
+	return BaseLookUpRate;
+}
+
+void ABaseCharacter::SetBaseLookUpRate(float newBaseLookUpRate)
+{
+	BaseLookUpRate = newBaseLookUpRate;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// DEFAULT METHODS (UE4) //////////////////////////////////////////////////////////////////////////
+
+void ABaseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+{
+	// set up gameplay key bindings
+	check(PlayerInputComponent);
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	// Bind movement events
+	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
+
+	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
+	// "turn" handles devices that provide an absolute delta, such as a mouse.
+	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("TurnRate", this, &ABaseCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &ABaseCharacter::LookUpAtRate);
+}
+
+void ABaseCharacter::MoveForward(float Value)
+{
+	if (Value != 0.0f)
+	{
+		// add movement in that direction
+		AddMovementInput(GetActorForwardVector(), Value);
+	}
+}
+
+void ABaseCharacter::MoveRight(float Value)
+{
+	if (Value != 0.0f)
+	{
+		// add movement in that direction
+		AddMovementInput(GetActorRightVector(), Value);
+	}
+}
+
+void ABaseCharacter::TurnAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ABaseCharacter::LookUpAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
 //////////////////////////////////////////////////////////////////////////

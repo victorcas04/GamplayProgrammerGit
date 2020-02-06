@@ -13,6 +13,7 @@ class AGamplayProgrammerGameMode : public AGameModeBase
 
 public:
 	AGamplayProgrammerGameMode();
+
 };
 
 

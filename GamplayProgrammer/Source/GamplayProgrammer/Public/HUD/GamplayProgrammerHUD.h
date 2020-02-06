@@ -12,14 +12,14 @@ class AGamplayProgrammerHUD : public AHUD
 	GENERATED_BODY()
 
 public:
-	AGamplayProgrammerHUD();
+	AGamplayProgrammerHUD() {}
 
 	/** Primary draw call for the HUD */
 	virtual void DrawHUD() override;
 
-private:
-	/** Crosshair asset pointer */
-	class UTexture2D* CrosshairTex;
+	/** Reticle asset pointer */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "Reticle 2DTexture")
+		class UTexture2D* ReticleTex;
 
 };
 

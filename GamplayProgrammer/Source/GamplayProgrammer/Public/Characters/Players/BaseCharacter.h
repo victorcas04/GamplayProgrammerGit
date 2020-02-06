@@ -10,6 +10,7 @@
 #include "BaseCharacter.generated.h"
 
 class UCharacterMovementComponent;
+class UInputComponent;
 
 USTRUCT()
 struct FCharacterProperties
@@ -91,6 +92,10 @@ public:
 		int mCurrAmmo;
 
 	//
+	UPROPERTY(EditAnywhere, DisplayName = "Ammo Per Shot")
+		int mAmmoPerShot = 1;
+
+	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Is Reloading")
 		bool bIsReloading = false;
 
@@ -104,7 +109,7 @@ public:
 		float mZoomInMux = 0.4f;
 };
 
-UCLASS()
+UCLASS(Blueprintable, config = Game)
 class GAMPLAYPROGRAMMER_API ABaseCharacter : public ACharacter, public IIHealth
 {
 	GENERATED_BODY()
@@ -114,17 +119,13 @@ public:
 	// Sets default values for this character's properties
 	ABaseCharacter();
 
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		class UCameraComponent* FirstPersonCameraComponent;
-
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		class USkeletalMeshComponent* Mesh1P;
-
 	//
 	UPROPERTY(BlueprintReadOnly)
 		UCharacterMovementComponent* BaseCharacterMovementComponent;
+
+	/** Pawn mesh: 1st person view (arms; seen only by self) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+		class USkeletalMeshComponent* Mesh1P;
 
 	// this is public so the design team can modify it on editor
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "Sliding Decay Curve"), Category = "Timelines | Movement")
@@ -133,6 +134,17 @@ public:
 	// this is public so the design team can modify it on editor
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "ZoomIn Delay Curve"), Category = "Timelines | Weapon")
 		UCurveFloat* FloatCurveZoomInDelay;
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// APawn interface
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	// End of APawn interface
+
+	/** Returns Mesh1P subobject **/
+	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
 	// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
@@ -190,6 +202,14 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
+		int GetAmmoPerShot();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetAmmoPerShot(int newAmmoPerShot = 1);
+
+	//
+	UFUNCTION(BlueprintCallable)
 		float GetReloadTime();
 
 	//
@@ -238,6 +258,14 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
+		void CustomCharacterStartJumping();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void CustomCharacterStopJumping();
+
+	//
+	UFUNCTION(BlueprintCallable)
 		void StartRunning();
 
 	//
@@ -279,6 +307,10 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		void StopReloading();
+
+	/** Fires a projectile. */
+	UFUNCTION(BlueprintCallable)
+		void OnFire();
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -338,17 +370,68 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	// WEAPON //////////////////////////////////////////////////////////////////////////
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	/** Gun mesh: 1st person view (seen only by self) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		class USkeletalMeshComponent* FP_Gun;
 
-	/** Returns Mesh1P subobject **/
-	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	/** Location on gun mesh where projectiles should spawn. */
+	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
+		class USceneComponent* FP_MuzzleLocation;
+
+	/** Projectile class to spawn */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		TSubclassOf<class ABaseProjectile> ProjectileClass;
+
+	/** Gun muzzle's offset from the characters location */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		FVector GunOffset;
+
+	/** Sound to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		class USoundBase* FireSound;
+
+	/** AnimMontage to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		class UAnimMontage* FireAnimation;
+
+	//////////////////////////////////////////////////////////////////////////
+
+	// CAMERA //////////////////////////////////////////////////////////////////////////
+
+	/** First person camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class UCameraComponent* FirstPersonCameraComponent;
+
+	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
+	UPROPERTY(EditAnywhere, Category = Camera)
+		float BaseTurnRate = 45.0f;
+
+	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
+	UPROPERTY(EditAnywhere, Category = Camera)
+		float BaseLookUpRate = 45.0f;
+
+	//
+	UFUNCTION()
+		float GetBaseTurnRate();
+
+	//
+	UFUNCTION()
+		void SetBaseTurnRate(float newBaseTurnRate);
+
+	//
+	UFUNCTION()
+		float GetBaseLookUpRate();
+
+	//
+	UFUNCTION()
+		void SetBaseLookUpRate(float newBaseLookUpRate);
 
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	//////////////////////////////////////////////////////////////////////////
 
 protected:
 	// Called when the game starts or when spawned
@@ -357,6 +440,28 @@ protected:
 	//
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "Base Character Properties"))
 		FCharacterProperties ChProperties;
+
+	// DEFAULT METHODS (UE4) //////////////////////////////////////////////////////////////////////////
+
+	/** Handles moving forward/backward */
+	void MoveForward(float Val);
+
+	/** Handles stafing movement, left and right */
+	void MoveRight(float Val);
+
+	/**
+	 * Called via input to turn at a given rate.
+	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
+	 */
+	void TurnAtRate(float Rate);
+
+	/**
+	 * Called via input to turn look up/down at a given rate.
+	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
+	 */
+	void LookUpAtRate(float Rate);
+
+	//////////////////////////////////////////////////////////////////////////
 
 private:
 
