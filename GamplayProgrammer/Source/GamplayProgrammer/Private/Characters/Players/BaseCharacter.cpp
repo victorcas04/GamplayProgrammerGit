@@ -5,6 +5,7 @@
 #include "Runtime/Engine/Public/Engine.h"
 // include for timers (delays)
 #include <Engine/World.h>
+#include "GameFramework/CharacterMovementComponent.h"
 
 // DEFAULT INCLUDES (UE4) //////////////////////////////////////////////////////////////////////////
 
@@ -17,8 +18,6 @@
 #include "Kismet/GameplayStatics.h"
 
 //////////////////////////////////////////////////////////////////////////
-
-#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABaseCharacter::ABaseCharacter()
@@ -81,6 +80,9 @@ void ABaseCharacter::BeginPlay()
 	// Timelines setup
 	SlidingDecayTimelineSetup();
 	ZoomInTimelineSetup();
+
+	// need to do this here instead of the constructor because it gets overrided by unreal on play
+	BaseCharacterMovementComponent->GetNavAgentPropertiesRef().bCanCrouch = true;
 }
 
 void ABaseCharacter::SetupChProperties()
@@ -428,6 +430,7 @@ void ABaseCharacter::StartCrouching()
 	if (CheckCanStartCrouching())
 	{
 		SetIsCrouching();
+
 		// we use the standard crouch from ACharacter
 		Crouch();
 		if (CheckIsZoomingIn())
@@ -512,8 +515,6 @@ void ABaseCharacter::ZoomIn()
 		{
 			ZoomInTimeline->Play();
 		}
-		// TODO: remove this
-		//FirstPersonCameraComponent->FieldOfView *= (1 - GetZoomInMux());
 	}
 }
 
@@ -524,8 +525,6 @@ void ABaseCharacter::ZoomOut()
 	{
 		SetWalkSpeedOnDiv(GetZoomInSpeedMux());
 		SetWalkSpeedOnCrouched();
-		// TODO: remove this
-		//FirstPersonCameraComponent->FieldOfView /= (1 - GetZoomInMux());
 		if (ZoomInTimeline)
 		{
 			ZoomInTimeline->Reverse();
@@ -564,52 +563,58 @@ void ABaseCharacter::OnFire()
 {
 	if (!CheckIsReloading())
 	{
-		// try and fire a projectile
-		if (ProjectileClass != NULL)
+		if (CheckHaveEnoughAmmo())
 		{
-			UWorld* const World = GetWorld();
-			if (World != NULL)
+			// try and fire a projectile
+			if (ProjectileClass != NULL)
 			{
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-				// spawn the projectile at the muzzle
-				ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				if (ProjectileSpawned)
+				UWorld* const World = GetWorld();
+				if (World != NULL)
 				{
-					ProjectileSpawned->SetBaseChOwner(this);
+					const FRotator SpawnRotation = GetControlRotation();
+					// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+					const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+					//Set Spawn Collision Handling Override
+					FActorSpawnParameters ActorSpawnParams;
+					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+					// spawn the projectile at the muzzle
+					ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+					if (ProjectileSpawned)
+					{
+						ProjectileSpawned->SetBaseChOwner(this);
+					}
+					DecreaseAmmo(GetAmmoPerShot());
 				}
-				DecreaseAmmo(GetAmmoPerShot());
-			}
 
-			// try and play the sound if specified
-			if (FireSound != NULL)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-			}
-
-			// try and play a firing animation if specified
-			if (FireAnimation != NULL)
-			{
-				// Get the animation object for the arms mesh
-				UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-				if (AnimInstance != NULL)
+				// try and play the sound if specified
+				if (FireSound != NULL)
 				{
-					AnimInstance->Montage_Play(FireAnimation, 1.f);
+					UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 				}
+
+				// try and play a firing animation if specified
+				if (FireAnimation != NULL)
+				{
+					// Get the animation object for the arms mesh
+					UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+					if (AnimInstance != NULL)
+					{
+						AnimInstance->Montage_Play(FireAnimation, 1.f);
+					}
+				}
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Projectile Class assigned.");
 			}
 		}
 		else
 		{
-			// here should go the call to play the hurt anim
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Projectile Class assigned.");
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "WARNING: not enough ammo.");
+			StartReloading();
 		}
-		
 	}
 }
 
@@ -635,6 +640,11 @@ bool ABaseCharacter::CheckIsSliding()
 bool ABaseCharacter::CheckIsReloading()
 {
 	return ChProperties.bIsReloading;
+}
+
+bool ABaseCharacter::CheckHaveEnoughAmmo()
+{
+	return GetAmmoPerShot() <= GetCurrAmmo();
 }
 
 bool ABaseCharacter::CheckIsZoomingIn()
@@ -766,41 +776,41 @@ void ABaseCharacter::SlidingDecayTimelineSetup()
 {
 	if (FloatCurveSlidingDecay)
 	{
-		// TODO: remove this
-		//UCurveFloat* FloatCurveSlidingTemp = NewObject<UCurveFloat>();
+		FOnTimelineFloat OnSlidingDecayTimelineCallback;
+		FOnTimelineEventStatic OnSlidingDecayTimelineFinishedCallback;
 
-		FOnTimelineFloat OnTimelineCallback;
-		FOnTimelineEventStatic OnTimelineFinishedCallback;
-
-		SlidingDecayTimeline = NewObject<UTimelineComponent>(this, FName("TimelineAnimation"));
+		SlidingDecayTimeline = NewObject<UTimelineComponent>(this, FName("SlidingDecayTimelineAnimation"));
 		SlidingDecayTimeline->SetLooping(false);
 
 		// we reasign dynamically the keypoints on the timeline to make it fit the sliding duration //////////////////////////////////////////////////////////////////////////
 
 		SlidingDecayTimeline->SetTimelineLength(GetMaxSlidingTime());
 
-		float OldTimeBeginTransition; float OldTimeEndTransition;
-		FloatCurveSlidingDecay->FloatCurve.GetTimeRange(OldTimeBeginTransition, OldTimeEndTransition);
-
-		float ratioTemp = GetMaxSlidingTime() / OldTimeEndTransition;
-
-		TArray<FRichCurveKey> CopyOfKeys = FloatCurveSlidingDecay->FloatCurve.GetCopyOfKeys();
-		FloatCurveSlidingDecay->FloatCurve.Reset();
-		for (FRichCurveKey k : CopyOfKeys)
+		if (GetMaxSlidingTime() > 0.0f)
 		{
-			FRichCurveKey key = FRichCurveKey(k.Time * ratioTemp, k.Value);
-			key.InterpMode = k.InterpMode;
-			key.TangentMode = k.TangentMode;
-			FloatCurveSlidingDecay->FloatCurve.AddKey(key.Time, key.Value);
+			float OldTimeBeginTransition; float OldTimeEndTransition;
+			FloatCurveSlidingDecay->FloatCurve.GetTimeRange(OldTimeBeginTransition, OldTimeEndTransition);
+
+			float ratioTemp = GetMaxSlidingTime() / OldTimeEndTransition;
+
+			TArray<FRichCurveKey> CopyOfKeys = FloatCurveSlidingDecay->FloatCurve.GetCopyOfKeys();
+			FloatCurveSlidingDecay->FloatCurve.Reset();
+			for (FRichCurveKey k : CopyOfKeys)
+			{
+				FRichCurveKey key = FRichCurveKey(k.Time * ratioTemp, k.Value);
+				key.InterpMode = k.InterpMode;
+				key.TangentMode = k.TangentMode;
+				FloatCurveSlidingDecay->FloatCurve.AddKey(key.Time, key.Value);
+			}
 		}
 
 		//////////////////////////////////////////////////////////////////////////
 
-		OnTimelineCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineCallback") });
-		SlidingDecayTimeline->AddInterpFloat(FloatCurveSlidingDecay, OnTimelineCallback);
+		OnSlidingDecayTimelineCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineCallback") });
+		SlidingDecayTimeline->AddInterpFloat(FloatCurveSlidingDecay, OnSlidingDecayTimelineCallback);
 
-		OnTimelineFinishedCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineFinishedCallback") });
-		SlidingDecayTimeline->SetTimelineFinishedFunc(OnTimelineFinishedCallback);
+		OnSlidingDecayTimelineFinishedCallback.BindUFunction(this, FName{ TEXT("SlidingDecayTimelineFinishedCallback") });
+		SlidingDecayTimeline->SetTimelineFinishedFunc(OnSlidingDecayTimelineFinishedCallback);
 
 		SlidingDecayTimeline->RegisterComponent();
 	}
@@ -828,13 +838,9 @@ void ABaseCharacter::ZoomInTimelineSetup()
 {
 	if (FloatCurveZoomInDelay)
 	{
-		// TODO: remove this
-		//UCurveFloat* FloatCurveZoomInTemp = NewObject<UCurveFloat>();
+		FOnTimelineFloat OnZoomInDelayTimelineCallback;
 
-		FOnTimelineFloat OnTimelineCallback;
-		FOnTimelineEventStatic OnTimelineFinishedCallback;
-
-		ZoomInTimeline = NewObject<UTimelineComponent>(this, FName("TimelineAnimation"));
+		ZoomInTimeline = NewObject<UTimelineComponent>(this, FName("ZoomInDelayTimelineAnimation"));
 		ZoomInTimeline->SetLooping(false);
 
 		// we reasign dynamically the keypoints on the timeline to make it fit the zoom in delay //////////////////////////////////////////////////////////////////////////
@@ -861,8 +867,8 @@ void ABaseCharacter::ZoomInTimelineSetup()
 
 		//////////////////////////////////////////////////////////////////////////
 
-		OnTimelineCallback.BindUFunction(this, FName{ TEXT("ZoomInTimelineCallback") });
-		ZoomInTimeline->AddInterpFloat(FloatCurveZoomInDelay, OnTimelineCallback);
+		OnZoomInDelayTimelineCallback.BindUFunction(this, FName{ TEXT("ZoomInTimelineCallback") });
+		ZoomInTimeline->AddInterpFloat(FloatCurveZoomInDelay, OnZoomInDelayTimelineCallback);
 
 		ZoomInTimeline->RegisterComponent();
 	}
