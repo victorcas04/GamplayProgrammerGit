@@ -21,10 +21,6 @@
  
 ##### TODOs
  - HUD -> health + bullets
- - Reload to match hud
- - Basic enemy (movement + receive dmg + do dmg)
  - New map (gamemode)
- - HUD -> for gamemode and enemy
- - Change weapon
  - Basic interact
  - Ability system
