@@ -249,6 +249,8 @@ void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != NULL) && (OtherActor != this))
 	{
+		CustomProjectileHit(OtherActor);
+
 		if ((OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 		{
 			OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
@@ -269,6 +271,12 @@ void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 	}
 }
 
+void ABaseProjectile::CustomProjectileHit_Implementation(AActor* OtherActor)
+{
+
+}
+
 void ABaseProjectile::DoWhenDestroyed_Implementation()
 {
+
 }

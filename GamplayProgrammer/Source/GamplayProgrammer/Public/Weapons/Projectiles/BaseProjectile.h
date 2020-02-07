@@ -90,6 +90,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 		void DoWhenDestroyed();
 
+	// each implementation must be done in blueprint, so design can iterate over it easily
+	UFUNCTION(BlueprintNativeEvent)
+		void CustomProjectileHit(AActor* OtherActor);
+
 	// STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
 	//

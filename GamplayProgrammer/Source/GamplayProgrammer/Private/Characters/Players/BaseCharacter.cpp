@@ -120,6 +120,16 @@ void ABaseCharacter::SetIsInvulnerable(bool newIsInvulnerable)
 	ChProperties.bIsInvulnerable = newIsInvulnerable;
 }
 
+bool ABaseCharacter::CheckIsDying()
+{
+	return ChProperties.bIsDying;
+}
+
+void ABaseCharacter::SetIsDying(bool newIsDying)
+{
+	ChProperties.bIsDying = true;
+}
+
 void ABaseCharacter::SetCurrHealth(int newCurrHealth)
 {
 	ChProperties.mCurrHealth = newCurrHealth;
@@ -135,10 +145,14 @@ void ABaseCharacter::CustomCharacterLoseHealth(int ammount)
 	{
 		int newHealthTemp = GetCurrHealth() - ammount;
 		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
+		int tempCurrHealth = GetCurrHealth();
 		SetCurrHealth(newHealthTemp);
-		// here should go the call to play the hurt anim
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
-		StartInvulnerability();
+		if (tempCurrHealth != GetCurrHealth())
+		{
+			// here should go the call to play the hurt anim
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
+			StartInvulnerability();
+		}
 	}
 }
 
@@ -148,16 +162,22 @@ void ABaseCharacter::CustomCharacterGainHealth(int ammount)
 	{
 		int newHealthTemp = GetCurrHealth() + ammount;
 		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
+		int tempCurrHealth = GetCurrHealth();
 		SetCurrHealth(newHealthTemp);
-		// here should go the call to play anim or effects of gaining health
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health effect...");
+		if (tempCurrHealth != GetCurrHealth())
+		{
+			// here should go the call to play anim or effects of gaining health
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health effect...");
+		}
 	}
 }
 
 void ABaseCharacter::CustomCharacterDie()
 {
-	if (CheckIsAlive())
+	if (!CheckIsDying())
 	{
+		SetIsDying();
+
 		// here should go the call to play death anim
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "dying anim...");
 

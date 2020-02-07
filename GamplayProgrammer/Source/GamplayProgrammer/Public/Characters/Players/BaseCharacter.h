@@ -28,6 +28,10 @@ public:
 		float mInvulnerableTime = 2.0f;
 
 	//
+	UPROPERTY(VisibleAnywhere, DisplayName = "Is Dying")
+		bool bIsDying = false;
+
+	//
 	UPROPERTY(EditAnywhere, DisplayName = "Max Health", meta = (ClampMin = "0", ClampMax = "10"))
 		int mMaxHealth = 3;
 
@@ -147,6 +151,10 @@ public:
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
 	// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
+
+	//
+	UFUNCTION()
+		void SetIsInvulnerable(bool newIsInvulnerable = true);
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -342,6 +350,10 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
+		bool CheckIsDying();
+
+	//
+	UFUNCTION(BlueprintCallable)
 		bool CheckIsAlive();
 
 	//
@@ -486,7 +498,7 @@ private:
 
 	//
 	UFUNCTION()
-		void SetIsInvulnerable(bool newIsInvulnerable = true);
+		void SetIsDying(bool newIsDying = true);
 
 	// 
 	UFUNCTION()

@@ -23,12 +23,20 @@ class GAMPLAYPROGRAMMER_API IIHealth
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
+	
+	// To use those interface functions:
+	// 1.- Create CustomLoseHealth, CustomGainHEalth or CustomDie in the class that wants to implement them
+	// 2.- On the blueprint of that class call those custom methods from this interface generic events
+	// 3.- To access its implementations from other blueprints call the generic interface events
+
 	//
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void ILoseHealth(int ammount);
+
 	//
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void IGainHealth(int ammount);
+
 	//
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void IDie();
