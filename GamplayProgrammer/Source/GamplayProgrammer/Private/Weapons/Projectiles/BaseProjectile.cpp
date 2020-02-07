@@ -231,8 +231,7 @@ void ABaseProjectile::SetProjectileSpeed(float newProjectileSpeed)
 {
 	PtProperties.mProjectileSpeed = newProjectileSpeed;
 	ProjectileMovement->MaxSpeed = newProjectileSpeed;
-	// TODO: check velocity
-	//ProjectileMovement->Velocity = FVector(newProjectileSpeed, newProjectileSpeed, newProjectileSpeed);
+	ProjectileMovement->Velocity *= newProjectileSpeed;
 }
 
 //////////////////////////////////////////////////////////////////////////
