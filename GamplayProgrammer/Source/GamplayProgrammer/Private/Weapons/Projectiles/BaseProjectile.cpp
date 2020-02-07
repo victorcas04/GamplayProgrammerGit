@@ -65,8 +65,7 @@ void ABaseProjectile::SetupPtProperties()
 {
 	SetLifeTime(GetLifeTime());
 	SetFallOff(GetFallOff());
-	SetProjectileMaxSpeed(GetProjectileMaxSpeed());
-	SetProjectileInitSpeed(GetProjectileInitSpeed());
+	SetProjectileSpeed(GetProjectileSpeed());
 	SetCanBounce(CheckCanBounce());
 	SetCanStepOnIt(CheckCanStepOnIt());
 }
@@ -223,26 +222,17 @@ void ABaseProjectile::SetCanStepOnIt(bool newCanStepOnIt)
 	}
 }
 
-float ABaseProjectile::GetProjectileMaxSpeed()
+float ABaseProjectile::GetProjectileSpeed()
 {
-	return PtProperties.mProjectileMaxSpeed;
+	return PtProperties.mProjectileSpeed;
 }
 
-void ABaseProjectile::SetProjectileMaxSpeed(float newProjectileMaxSpeed)
+void ABaseProjectile::SetProjectileSpeed(float newProjectileSpeed)
 {
-	PtProperties.mProjectileMaxSpeed = newProjectileMaxSpeed;
-	ProjectileMovement->MaxSpeed = newProjectileMaxSpeed;
-}
-
-float ABaseProjectile::GetProjectileInitSpeed()
-{
-	return PtProperties.mProjectileInitSpeed;
-}
-
-void ABaseProjectile::SetProjectileInitSpeed(float newProjectileInitSpeed)
-{
-	PtProperties.mProjectileInitSpeed = newProjectileInitSpeed;
-	ProjectileMovement->InitialSpeed = newProjectileInitSpeed;
+	PtProperties.mProjectileSpeed = newProjectileSpeed;
+	ProjectileMovement->MaxSpeed = newProjectileSpeed;
+	// TODO: check velocity
+	//ProjectileMovement->Velocity = FVector(newProjectileSpeed, newProjectileSpeed, newProjectileSpeed);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -272,7 +262,7 @@ void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			StartAutodestroyTimer();
 		}
 
-		if (CheckShouldBeDestroyedOncontact())
+		if (CheckShouldBeDestroyedOncontact() && (this->StaticClass() != OtherActor->StaticClass()))
 		{
 			DoWhenDestroyed();
 			Destroy();

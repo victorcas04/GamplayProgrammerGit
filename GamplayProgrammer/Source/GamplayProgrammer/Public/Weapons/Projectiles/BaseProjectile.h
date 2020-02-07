@@ -62,12 +62,8 @@ public:
 		bool bShouldBeDestroyedOncontact = true;
 
 	//
-	UPROPERTY(EditAnywhere, DisplayName = "Projectile Max Speed", meta = (ClampMin = "0", ClampMax = "10000"))
-		float mProjectileMaxSpeed = 3000.0f;
-
-	//
-	UPROPERTY(EditAnywhere, DisplayName = "Projectile Init Speed", meta = (ClampMin = "0", ClampMax = "10000"))
-		float mProjectileInitSpeed = 3000.0f;
+	UPROPERTY(EditAnywhere, DisplayName = "Projectile Speed", meta = (ClampMin = "0", ClampMax = "10000"))
+		float mProjectileSpeed = 3000.0f;
 };
 
 UCLASS(config=Game)
@@ -182,19 +178,11 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		float GetProjectileMaxSpeed();
+		float GetProjectileSpeed();
 
 	//
 	UFUNCTION(BlueprintCallable)
-		void SetProjectileMaxSpeed(float newProjectileMaxSpeed);
-
-	//
-	UFUNCTION(BlueprintCallable)
-		float GetProjectileInitSpeed();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void SetProjectileInitSpeed(float newProjectileInitSpeed);
+		void SetProjectileSpeed(float newProjectileSpeed);
 
 	//////////////////////////////////////////////////////////////////////////
 

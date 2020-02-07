@@ -580,8 +580,10 @@ void ABaseCharacter::OnFire()
 
 				// spawn the projectile at the muzzle
 				ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				ProjectileSpawned->SetBaseChOwner(this);
-
+				if (ProjectileSpawned)
+				{
+					ProjectileSpawned->SetBaseChOwner(this);
+				}
 				DecreaseAmmo(GetAmmoPerShot());
 			}
 
