@@ -10,6 +10,20 @@
 class UStaticMeshComponent;
 class ABaseCharacter;
 
+UENUM(BlueprintType)
+enum class EProjectileTypes : uint8
+{
+	// Normal projectile.
+	// Does damage to enemies.
+	// Can move light objects.
+	E_NORMAL,
+	// Launches a grenade that explodes after a time.
+	// Does more damage to enemies and have self damage.
+	// Can move heavy objects.
+	E_EXPLOSIVE,
+	E_LAST,
+};
+
 USTRUCT()
 struct FProjectileProperties
 {

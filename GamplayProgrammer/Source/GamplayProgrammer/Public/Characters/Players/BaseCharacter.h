@@ -11,6 +11,7 @@
 
 class UCharacterMovementComponent;
 class UInputComponent;
+class UWeaponComponent;
 
 USTRUCT()
 struct FCharacterProperties
@@ -120,6 +121,10 @@ class GAMPLAYPROGRAMMER_API ABaseCharacter : public ACharacter, public IIHealth
 
 public:
 
+	//
+	UFUNCTION(BlueprintCallable)
+		void tempChangeAmmo();
+
 	// Sets default values for this character's properties
 	ABaseCharacter();
 
@@ -130,14 +135,6 @@ public:
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 		class USkeletalMeshComponent* Mesh1P;
-
-	// this is public so the design team can modify it on editor
-	UPROPERTY(EditAnywhere, meta = (DisplayName = "Sliding Decay Curve"), Category = "Timelines | Movement")
-		UCurveFloat* FloatCurveSlidingDecay;
-
-	// this is public so the design team can modify it on editor
-	UPROPERTY(EditAnywhere, meta = (DisplayName = "ZoomIn Delay Curve"), Category = "Timelines | Weapon")
-		UCurveFloat* FloatCurveZoomInDelay;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -388,6 +385,10 @@ public:
 
 	// WEAPON //////////////////////////////////////////////////////////////////////////
 
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		class UWeaponComponent* BaseWeaponComponent;
+
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 		class USkeletalMeshComponent* FP_Gun;
@@ -450,12 +451,21 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 
 protected:
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	//
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "Base Character Properties"))
 		FCharacterProperties ChProperties;
+
+	// this is public so the design team can modify it on editor
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Sliding Decay Curve"), Category = "Timelines | Movement")
+		UCurveFloat* FloatCurveSlidingDecay;
+
+	// this is public so the design team can modify it on editor
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "ZoomIn Delay Curve"), Category = "Timelines | Weapon")
+		UCurveFloat* FloatCurveZoomInDelay;
 
 	// DEFAULT METHODS (UE4) //////////////////////////////////////////////////////////////////////////
 

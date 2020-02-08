@@ -5,6 +5,7 @@
 #include "Runtime/Engine/Public/Engine.h"
 // include for timers (delays)
 #include <Engine/World.h>
+#include "BaseWeapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // DEFAULT INCLUDES (UE4) //////////////////////////////////////////////////////////////////////////
@@ -63,6 +64,9 @@ ABaseCharacter::ABaseCharacter()
 
 	// Setup our character movement component ref
 	BaseCharacterMovementComponent = GetCharacterMovement();
+
+	// Create our weapon logic
+	BaseWeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("WeaponComp"));
 }
 
 // Called when the game starts or when spawned
@@ -579,8 +583,21 @@ void ABaseCharacter::StopReloading()
 	}
 }
 
+void ABaseCharacter::tempChangeAmmo()
+{
+	if (BaseWeaponComponent)
+	{
+		BaseWeaponComponent->ChangeAmmoType();
+	}
+}
+
 void ABaseCharacter::OnFire()
 {
+	if (BaseWeaponComponent)
+	{
+		BaseWeaponComponent->Shoot();
+	}
+
 	if (!CheckIsReloading())
 	{
 		if (CheckHaveEnoughAmmo())
