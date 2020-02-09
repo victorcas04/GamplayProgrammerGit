@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/// @author: Victor de Castro Hurtado
 
 #pragma once
 
@@ -65,11 +65,12 @@ public:
 	UPROPERTY(EditAnywhere, DisplayName = "ZoomIn Delay", meta = (ClampMin = "0", ClampMax = "2"))
 		float mZoomInDelay = 0.2f;
 
-	// all properties (except Current ammo) must be the same to consider two weapons the same weapon
+	// all properties (except Objects and Current ammo) must be the same to consider two weapons the same weapon
 	bool operator==(const FAmmoProperties& other) const 
 	{
 		return (ProjectileType == other.ProjectileType) && (mMaxAmmo == other.mMaxAmmo) && 
-			(mAmmoPerShot == other.mAmmoPerShot) && (mReloadTime == other.mReloadTime) && (mZoomInMux == other.mZoomInMux);
+			(mAmmoPerShot == other.mAmmoPerShot) && (mReloadTime == other.mReloadTime) &&
+			(mZoomInMux == other.mZoomInMux) && (mZoomInSpeedMux == other.mZoomInSpeedMux) && (mZoomInDelay == other.mZoomInDelay);
 	}
 
 };

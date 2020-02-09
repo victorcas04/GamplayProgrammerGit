@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/// @author: Victor de Castro Hurtado
 
 #pragma once
 
@@ -73,49 +73,14 @@ public:
 	// 1.0 = no slow down when crouching
 	UPROPERTY(EditAnywhere, DisplayName = "Mux Crouch Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
 		float mCrouchSpeedMux = 0.6f;
-	/*
-	// REM
-	// 0.0 = instant zoom in
-	// 2.0 = it'll take 2 secs to zoom in
-	UPROPERTY(EditAnywhere, DisplayName = "ZoomIn Delay", meta = (ClampMin = "0", ClampMax = "2"))
-		float mZoomInDelay = 0.2f;
-	
-	// 0.1 = max slow down when zooming in
-	// 1.0 = no slow down when zooming in
-	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
-		float mZoomInSpeedMux = 0.2f;
-	*/
+
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Is ZoomingIn")
 		bool bIsZoomingIn = false;
-	/*
-	// REM
-	UPROPERTY(EditAnywhere, DisplayName = "Max Ammo", meta = (ClampMin = "0", ClampMax = "100"))
-		int mMaxAmmo = 10;
-
-	// REM
-	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo")
-		int mCurrentAmmo;
-
-	// REM
-	UPROPERTY(EditAnywhere, DisplayName = "Ammo Per Shot")
-		int mAmmoPerShot = 1;
-	*/
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Is Reloading")
 		bool bIsReloading = false;
-	/*
-	// REM
-	UPROPERTY(EditAnywhere, DisplayName = "ReloadTime", meta = (ClampMin = "0", ClampMax = "10"))
-		float mReloadTime = 2.0f;
-
-	// REM
-	// 0.0 = no zoom
-	// 0.9 = max zoom
-	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn", meta = (ClampMin = "0", ClampMax = "0.9"))
-		float mZoomInMux = 0.4f;
-	*/
 };
 
 UCLASS(Blueprintable, config = Game)
@@ -192,51 +157,7 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		float GetCrouchSpeedMux();
-	/*
-	//
-	UFUNCTION(BlueprintCallable)
-		float GetZoomInSpeedMux();
 	
-	//
-	UFUNCTION(BlueprintCallable)
-		int GetMaxAmmo();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		int GetCurrentAmmo();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		int GetAmmoPerShot();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void SetAmmoPerShot(int newAmmoPerShot = 1);
-
-	//
-	UFUNCTION(BlueprintCallable)
-		float GetReloadTime();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void SetReloadTime(float newReloadTime);
-
-	//
-	UFUNCTION(BlueprintCallable)
-		float GetZoomInDelay();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void SetZoomInDelay(float newZoomInDelay);
-
-	//
-	UFUNCTION(BlueprintCallable)
-		float GetZoomInMux();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void SetZoomInMux(float newZoomInMux);
-	*/
 	//////////////////////////////////////////////////////////////////////////
 
 	// MAIN ACTIONS //////////////////////////////////////////////////////////////////////////
@@ -324,27 +245,7 @@ public:
 	/** Fires a projectile. */
 	UFUNCTION(BlueprintCallable)
 		void CharacterShoot();
-	/*
-	//
-	UFUNCTION(BlueprintCallable)
-		void DecreaseAmmo(int ammount);
 
-	//
-	UFUNCTION(BlueprintCallable)
-		void IncreaseAmmo(int ammount);
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void RestoreFullAmmo();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void EmptyAmmo();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void DoWhenAmmoIsEmpty();
-	*/
 	//////////////////////////////////////////////////////////////////////////
 
 	// BOOLEAN CHECKERS //////////////////////////////////////////////////////////////////////////
@@ -376,19 +277,11 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		bool CheckIsZoomingIn();
-	/*
-	//
-	UFUNCTION(BlueprintCallable)
-		bool CheckIsAmmoFull();
-	*/
+
 	//
 	UFUNCTION(BlueprintCallable)
 		bool CheckIsReloading();
-	/*
-	//
-	UFUNCTION(BlueprintCallable)
-		bool CheckHaveEnoughAmmo();
-	*/
+
 	//////////////////////////////////////////////////////////////////////////
 
 	// WEAPON //////////////////////////////////////////////////////////////////////////
@@ -405,25 +298,9 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 		class USceneComponent* FP_MuzzleLocation;
 
-	/** Projectile class to spawn */
-	/*
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		TSubclassOf<class ABaseProjectile> ProjectileClass;
-	*/
-
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 		FVector GunOffset;
-
-	// TODO FROM HERE
-
-	/** Sound to play each time we fire */
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class USoundBase* FireSound;*/
-	
-	/** AnimMontage to play each time we fire */
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class UAnimMontage* FireAnimation;*/
 	
 	//////////////////////////////////////////////////////////////////////////
 
@@ -474,11 +351,7 @@ protected:
 	//
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "Sliding Decay Curve"))
 		UCurveFloat* FloatCurveSlidingDecay;
-	/*
-	//
-	UPROPERTY(EditAnywhere, meta = (DisplayName = "ZoomIn Delay Curve"))
-		UCurveFloat* FloatCurveZoomInDelay;
-	*/
+
 	// DEFAULT METHODS (UE4) //////////////////////////////////////////////////////////////////////////
 
 	/** Handles moving forward/backward */
@@ -515,6 +388,10 @@ private:
 	UFUNCTION()
 		void SetupChProperties();
 
+	//
+	UFUNCTION()
+		void ResetZoom();
+
 	// SETS //////////////////////////////////////////////////////////////////////////
 	// we set this private to avoid problems
 
@@ -545,11 +422,7 @@ private:
 	// 
 	UFUNCTION()
 		void SetIsZoomingIn(bool newIsZoomingIn = true);
-	/*
-	// 
-	UFUNCTION()
-		void SetCurrentAmmo(int newCurrentAmmo);
-	*/
+
 	//////////////////////////////////////////////////////////////////////////
 
 	// SPEED RELATED FUNCTIONS //////////////////////////////////////////////////////////////////////////
@@ -585,6 +458,14 @@ private:
 	// to restore the crouch speed (no need to specify a % since it's gonna be the same al the time)
 	UFUNCTION()
 		void ResetCrouchSpeed();
+
+	//
+	UFUNCTION()
+		void ResetDefaultSpeed();
+
+	//
+	UFUNCTION()
+	void ResetSpeedOnAmmoChange();
 
 	//////////////////////////////////////////////////////////////////////////
 

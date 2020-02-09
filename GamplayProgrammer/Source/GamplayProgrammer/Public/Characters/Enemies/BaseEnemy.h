@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/// @author: Victor de Castro Hurtado
 
 #pragma once
 
@@ -33,6 +33,8 @@ public:
 		int mDamage = 1;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEnemyDieDelegate);
+
 UCLASS(Blueprintable, config = Game)
 class GAMPLAYPROGRAMMER_API ABaseEnemy : public ACharacter, public IIHealth
 {
@@ -46,6 +48,10 @@ public:
 	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
 		UStaticMeshComponent* MeshEn;
+
+	//
+	UPROPERTY(BlueprintAssignable)
+		FEnemyDieDelegate IncreaseEnemiesDefeatedDelegate;
 
 	// CHARACTER PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 

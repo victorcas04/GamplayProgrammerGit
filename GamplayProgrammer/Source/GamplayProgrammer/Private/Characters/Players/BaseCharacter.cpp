@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/// @author: Victor de Castro Hurtado
 
 #include "BaseCharacter.h"
 // include for screen messages
@@ -93,7 +93,6 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::SetupChProperties()
 {
 	SetCurrentHealth(GetMaxHealth());
-	//SetCurrentAmmo(GetMaxAmmo());
 	SetDefaultSpeed(BaseCharacterMovementComponent->MaxWalkSpeed);
 	ResetCrouchSpeed();
 }
@@ -186,7 +185,7 @@ void ABaseCharacter::CustomCharacterDie()
 		// here should go the call to play death anim
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "dying anim...");
 
-		// TODO: restart level
+		// here should call Game Instance to restart the level or do whatever needed if you die
 	}
 }
 
@@ -244,12 +243,7 @@ float ABaseCharacter::GetCrouchSpeedMux()
 {
 	return ChProperties.mCrouchSpeedMux;
 }
-/*
-float ABaseCharacter::GetZoomInSpeedMux()
-{
-	return ChProperties.mZoomInSpeedMux;
-}
-*/
+
 void ABaseCharacter::SetIsReloading(bool newIsReloading)
 {
 	ChProperties.bIsReloading = newIsReloading;
@@ -259,95 +253,7 @@ void ABaseCharacter::SetIsZoomingIn(bool newIsZoomingIn)
 {
 	ChProperties.bIsZoomingIn = newIsZoomingIn;
 }
-/*
-int ABaseCharacter::GetMaxAmmo()
-{
-	return ChProperties.mMaxAmmo;
-}
 
-int ABaseCharacter::GetCurrentAmmo()
-{
-	return ChProperties.mCurrentAmmo;
-}
-
-void ABaseCharacter::SetCurrentAmmo(int newCurrentAmmo)
-{
-	ChProperties.mCurrentAmmo = newCurrentAmmo;
-	if (newCurrentAmmo == 0)
-	{
-		DoWhenAmmoIsEmpty();
-	}
-}
-
-int ABaseCharacter::GetAmmoPerShot()
-{
-	return ChProperties.mAmmoPerShot;
-}
-
-void ABaseCharacter::SetAmmoPerShot(int newAmmoPerShot)
-{
-	ChProperties.mAmmoPerShot = newAmmoPerShot;
-}
-
-void ABaseCharacter::DecreaseAmmo(int ammount)
-{
-	int newAmmoTemp = GetCurrentAmmo() - ammount;
-	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
-	SetCurrentAmmo(newAmmoTemp);
-}
-
-void ABaseCharacter::IncreaseAmmo(int ammount)
-{
-	int newAmmoTemp = GetCurrentAmmo() + ammount;
-	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
-	SetCurrentAmmo(newAmmoTemp);
-}
-
-void ABaseCharacter::RestoreFullAmmo()
-{
-	IncreaseAmmo(GetMaxAmmo());
-}
-
-void ABaseCharacter::EmptyAmmo()
-{
-	DecreaseAmmo(GetMaxAmmo());
-}
-
-void ABaseCharacter::DoWhenAmmoIsEmpty()
-{
-	StartReloading();
-}
-
-float ABaseCharacter::GetReloadTime()
-{
-	return ChProperties.mReloadTime;
-}
-
-void ABaseCharacter::SetReloadTime(float newReloadTime)
-{
-	ChProperties.mReloadTime = newReloadTime;
-}
-
-float ABaseCharacter::GetZoomInDelay()
-{
-	return ChProperties.mZoomInDelay;
-}
-
-void ABaseCharacter::SetZoomInDelay(float newZoomInDelay)
-{
-	ChProperties.mZoomInDelay = newZoomInDelay;
-}
-
-float ABaseCharacter::GetZoomInMux()
-{
-	return ChProperties.mZoomInMux;
-}
-
-void ABaseCharacter::SetZoomInMux(float newZoomInMux)
-{
-	ChProperties.mZoomInMux = newZoomInMux;
-}
-*/
 //////////////////////////////////////////////////////////////////////////
 
 // SPEED RELATED FUNCTIONS //////////////////////////////////////////////////////////////////////////
@@ -383,6 +289,25 @@ void ABaseCharacter::SetCrouchSpeedOnMux(float mux)
 void ABaseCharacter::ResetCrouchSpeed()
 {
 	BaseCharacterMovementComponent->MaxWalkSpeedCrouched = GetCrouchSpeedMux() * GetDefaultSpeed();
+}
+
+void ABaseCharacter::ResetDefaultSpeed()
+{
+	BaseCharacterMovementComponent->MaxWalkSpeed = ChProperties.mDefaultSpeed;
+}
+
+void ABaseCharacter::ResetSpeedOnAmmoChange()
+{
+	ResetDefaultSpeed();
+	if (CheckIsRunning())
+	{
+		SetWalkSpeedOnMux(GetRunSpeedMux());
+	}
+	if (CheckIsCrouching())
+	{
+		SetWalkSpeedOnMux(GetCrouchSpeedMux());
+		SetWalkSpeedOnCrouched();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -437,7 +362,7 @@ void ABaseCharacter::CustomCharacterStopJumping()
 
 void ABaseCharacter::StartRunning()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStartRunning())
 	{
 		StopCrouching();
@@ -452,7 +377,7 @@ void ABaseCharacter::StartRunning()
 
 void ABaseCharacter::StopRunning()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStopRunning())
 	{
 		SetWalkSpeedOnDiv(GetRunSpeedMux());
@@ -463,7 +388,7 @@ void ABaseCharacter::StopRunning()
 
 void ABaseCharacter::StartCrouching()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStartCrouching())
 	{
 		SetIsCrouching();
@@ -481,7 +406,7 @@ void ABaseCharacter::StartCrouching()
 
 void ABaseCharacter::StopCrouching()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStopCrouching())
 	{
 		// we use the standard uncrouch from ACharacter
@@ -495,7 +420,7 @@ void ABaseCharacter::StopCrouching()
 
 void ABaseCharacter::StartSliding()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStartSliding())
 	{
 		StartCrouching();
@@ -509,7 +434,7 @@ void ABaseCharacter::StartSliding()
 
 void ABaseCharacter::StopSliding(bool bKeepCrouched)
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStopSliding())
 	{
 		if (!bKeepCrouched)
@@ -533,6 +458,8 @@ void ABaseCharacter::RestartSliding()
 void ABaseCharacter::CharacterChangeAmmoType()
 {
 	CancelReload();
+	ResetZoom();
+	ResetSpeedOnAmmoChange();
 	if (WeaponComponent)
 	{
 		WeaponComponent->ChangeAmmoType();
@@ -542,12 +469,14 @@ void ABaseCharacter::CharacterChangeAmmoType()
 
 void ABaseCharacter::ZoomIn()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanZoomIn())
 	{
 		SetIsZoomingIn();
+
 		// first we set the walk speed while zomming
 		SetWalkSpeedOnZoomIn();
+
 		// then we set the rest of the walk speed multipliers
 		if (CheckIsRunning())
 		{
@@ -567,7 +496,7 @@ void ABaseCharacter::ZoomIn()
 
 void ABaseCharacter::ZoomOut()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanZoomOut())
 	{
 		if (WeaponComponent)
@@ -583,9 +512,19 @@ void ABaseCharacter::ZoomOut()
 	}
 }
 
+void ABaseCharacter::ResetZoom()
+{
+	FirstPersonCameraComponent->FieldOfView = mOriginalFOV;
+	if (ZoomInTimeline)
+	{
+		ZoomInTimeline->Stop();
+	}
+	SetIsZoomingIn(false);
+}
+
 void ABaseCharacter::StartReloading()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (CheckCanStartReloading())
 	{
 		SetIsReloading();
@@ -613,7 +552,7 @@ void ABaseCharacter::StartReloading()
 
 void ABaseCharacter::StopReloading()
 {
-	// animations should access BaseCharacter Gets to play animations, instead of changing them here
+	// play animation
 	if (WeaponComponent)
 	{
 		WeaponComponent->RestoreFullAmmoCurrent();
@@ -696,12 +635,7 @@ bool ABaseCharacter::CheckIsReloading()
 {
 	return ChProperties.bIsReloading;
 }
-/*
-bool ABaseCharacter::CheckHaveEnoughAmmo()
-{
-	return GetAmmoPerShot() <= GetCurrentAmmo();
-}
-*/
+
 bool ABaseCharacter::CheckIsZoomingIn()
 {
 	return ChProperties.bIsZoomingIn;
@@ -769,19 +703,25 @@ bool ABaseCharacter::CheckCanStopSliding()
 
 bool ABaseCharacter::CheckCanZoomIn()
 {
-	return !(CheckIsZoomingIn() || CheckIsReloading());
+	if (!CheckIsZoomingIn())
+	{
+		if (!CheckIsReloading())
+		{
+			return true;
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "Cannot ZoomIn while Reloading...");
+		}
+	}
+	return false;
 }
 
 bool ABaseCharacter::CheckCanZoomOut()
 {
 	return CheckIsZoomingIn();
 }
-/*
-bool ABaseCharacter::CheckIsAmmoFull()
-{
-	return ChProperties.mCurrentAmmo == ChProperties.mMaxAmmo;
-}
-*/
+
 bool ABaseCharacter::CheckCanStartReloading()
 {
 	if (WeaponComponent)

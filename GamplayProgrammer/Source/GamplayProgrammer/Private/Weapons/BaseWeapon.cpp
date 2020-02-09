@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/// @author: Victor de Castro Hurtado
 
 #include "BaseWeapon.h"
 // include for screen messages
@@ -13,7 +13,6 @@ UWeaponComponent::UWeaponComponent()
 	// off to improve performance if you don't need them.
 	//PrimaryComponentTick.bCanEverTick = true;
 }
-
 
 // Called when the game starts
 void UWeaponComponent::BeginPlay()

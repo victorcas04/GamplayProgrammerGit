@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/// @author: Victor de Castro Hurtado
 
 #include "BaseEnemy.h"
 #include "Components/StaticMeshComponent.h"
@@ -99,7 +98,15 @@ void ABaseEnemy::CustomEnemyLoseHealth(int ammount)
 
 void ABaseEnemy::CustomEnemyGainHealth(int ammount)
 {
-	
+	int newHealthTemp = GetCurrentHealth() + ammount;
+	newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
+	int tempCurrentHealth = GetCurrentHealth();
+	SetCurrentHealth(newHealthTemp);
+	if (tempCurrentHealth != GetCurrentHealth())
+	{
+		// here should go the call to play anim or effects of gaining health
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health effect...");
+	}
 }
 
 void ABaseEnemy::CustomEnemyDie()
@@ -110,6 +117,10 @@ void ABaseEnemy::CustomEnemyDie()
 
 		// here should go the call to play death anim
 		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "enemy dying anim...");
+
+		// we call the delegate on the level blueprint
+		// NOTE: this should be done with a call to the GameInstance, which controlls that kind of information
+		IncreaseEnemiesDefeatedDelegate.Broadcast();
 
 		Destroy();
 	}
