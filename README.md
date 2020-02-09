@@ -19,7 +19,3 @@
  - F:            use ability (WIP)
  - Q:            open gear wheel or change weapon (WIP)
  
-##### TODOs
- - HUD -> health + bullets
- - Map -> normal shoot + zoom + reload
- - Basic interact
