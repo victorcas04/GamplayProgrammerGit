@@ -140,7 +140,7 @@ void ABaseProjectile::SetFallOff(float newFallOff)
 
 bool ABaseProjectile::CheckCanBounce()
 {
-	return PtProperties.bCanBounce && (GetCurrBounces() < GetMaxBounces());
+	return PtProperties.bCanBounce && (GetCurrentBounces() < GetMaxBounces());
 }
 
 void ABaseProjectile::SetCanBounce(bool newShouldBounce)
@@ -169,14 +169,14 @@ void ABaseProjectile::SetMaxBounces(int newMaxBounces)
 	PtProperties.mMaxBounces = newMaxBounces;
 }
 
-int ABaseProjectile::GetCurrBounces()
+int ABaseProjectile::GetCurrentBounces()
 {
-	return PtProperties.mCurrBounces;
+	return PtProperties.mCurrentBounces;
 }
 
-void ABaseProjectile::SetCurrBounces(int newCurrBounces)
+void ABaseProjectile::SetCurrentBounces(int newCurrentBounces)
 {
-	PtProperties.mCurrBounces = newCurrBounces;
+	PtProperties.mCurrentBounces = newCurrentBounces;
 }
 
 float ABaseProjectile::GetExtraTimePerBounce()
@@ -258,7 +258,7 @@ void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 		if (CheckCanBounce())
 		{
-			SetCurrBounces(GetCurrBounces() + 1);
+			SetCurrentBounces(GetCurrentBounces() + 1);
 			SetLifeTimeRemaining(GetLifeTimeRemaining() + GetExtraTimePerBounce());
 			StartAutodestroyTimer();
 		}

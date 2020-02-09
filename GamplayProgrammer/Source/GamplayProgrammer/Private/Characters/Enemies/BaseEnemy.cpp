@@ -37,7 +37,7 @@ void ABaseEnemy::BeginPlay()
 
 void ABaseEnemy::SetupEnProperties()
 {
-	SetCurrHealth(GetMaxHealth());
+	SetCurrentHealth(GetMaxHealth());
 }
 
 bool ABaseEnemy::CheckIsDying()
@@ -52,7 +52,7 @@ void ABaseEnemy::SetIsDying(bool newIsDying)
 
 bool ABaseEnemy::CheckIsAlive()
 {
-	return EnProperties.mCurrHealth > 0;
+	return EnProperties.mCurrentHealth > 0;
 }
 
 int ABaseEnemy::GetMaxHealth()
@@ -60,15 +60,15 @@ int ABaseEnemy::GetMaxHealth()
 	return EnProperties.mMaxHealth;
 }
 
-int ABaseEnemy::GetCurrHealth()
+int ABaseEnemy::GetCurrentHealth()
 {
-	return EnProperties.mCurrHealth;
+	return EnProperties.mCurrentHealth;
 }
 
-void ABaseEnemy::SetCurrHealth(int newCurrHealth)
+void ABaseEnemy::SetCurrentHealth(int newCurrentHealth)
 {
-	EnProperties.mCurrHealth = newCurrHealth;
-	if (newCurrHealth == 0)
+	EnProperties.mCurrentHealth = newCurrentHealth;
+	if (newCurrentHealth == 0)
 	{
 		CustomEnemyDie();
 	}
@@ -86,11 +86,11 @@ void ABaseEnemy::SetDamage(int newDamage)
 
 void ABaseEnemy::CustomEnemyLoseHealth(int ammount)
 {
-	int newHealthTemp = GetCurrHealth() - ammount;
+	int newHealthTemp = GetCurrentHealth() - ammount;
 	newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
-	int tempCurrHealth = GetCurrHealth();
-	SetCurrHealth(newHealthTemp);
-	if (tempCurrHealth != GetCurrHealth())
+	int tempCurrentHealth = GetCurrentHealth();
+	SetCurrentHealth(newHealthTemp);
+	if (tempCurrentHealth != GetCurrentHealth())
 	{
 		// here should go the call to play the hurt anim
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "enemy losing health anim...");

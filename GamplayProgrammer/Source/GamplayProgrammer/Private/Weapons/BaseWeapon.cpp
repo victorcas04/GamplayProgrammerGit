@@ -34,7 +34,6 @@ ABaseCharacter * UWeaponComponent::GetOwnerAsCharacter()
 
 void UWeaponComponent::SetupWpProperties()
 {
-	SetCurrAmmo(GetMaxAmmo());
 	if (CheckIsValidPrimaryAmmo())
 	{
 		ChangeAmmoToPrimary();
@@ -47,13 +46,14 @@ void UWeaponComponent::SetupWpProperties()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Valid Ammo Type assigned on weapon.");
 	}
+	SetCurrentAmmo(GetMaxAmmoCurrent());
 }
 
 // WEAPON PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
-bool UWeaponComponent::CheckIsValidCurrAmmo()
+bool UWeaponComponent::CheckIsValidCurrentAmmo()
 {
-	return WpProperties.CurrProjectile.ProjectileType != EProjectileTypes::E_LAST;
+	return WpProperties.CurrentProjectile.ProjectileType != EProjectileTypes::E_LAST;
 }
 
 bool UWeaponComponent::CheckIsValidPrimaryAmmo()
@@ -68,106 +68,136 @@ bool UWeaponComponent::CheckIsValidSecondaryAmmo()
 
 bool UWeaponComponent::CheckIsPrimaryAmmoType()
 {
-	return WpProperties.CurrProjectile == WpProperties.PrimaryProjectile;
+	return WpProperties.CurrentProjectile == WpProperties.PrimaryProjectile;
 }
 
 TSubclassOf<class ABaseProjectile> UWeaponComponent::GetProjectileToSpawn()
 {
-	return WpProperties.CurrProjectile.ProjectileToSpawn;
+	return WpProperties.CurrentProjectile.ProjectileToSpawn;
 }
 
 USoundBase* UWeaponComponent::GetFireSound()
 {
-	return WpProperties.CurrProjectile.FireSound;
+	return WpProperties.CurrentProjectile.FireSound;
 }
 
 UAnimMontage * UWeaponComponent::GetFireAnimation()
 {
-	return WpProperties.CurrProjectile.FireAnimation;
+	return WpProperties.CurrentProjectile.FireAnimation;
 }
 
 void UWeaponComponent::SetProjectileToSpawn(TSubclassOf<class ABaseProjectile> newProjectileToSpawn)
 {
-	WpProperties.CurrProjectile.ProjectileToSpawn = newProjectileToSpawn;
+	WpProperties.CurrentProjectile.ProjectileToSpawn = newProjectileToSpawn;
 }
 
 float UWeaponComponent::GetZoomInSpeedMux()
 {
-	return WpProperties.CurrProjectile.mZoomInSpeedMux;
+	return WpProperties.CurrentProjectile.mZoomInSpeedMux;
 }
 
-int UWeaponComponent::GetMaxAmmo()
+int UWeaponComponent::GetMaxAmmoCurrent()
 {
-	return WpProperties.CurrProjectile.mMaxAmmo;
+	return WpProperties.CurrentProjectile.mMaxAmmo;
 }
 
-int UWeaponComponent::GetCurrAmmo()
+int UWeaponComponent::GetMaxAmmoPrimary()
 {
-	return WpProperties.CurrProjectile.mCurrAmmo;
+	return WpProperties.PrimaryProjectile.mMaxAmmo;
 }
 
-void UWeaponComponent::SetCurrAmmo(int newCurrAmmo)
+int UWeaponComponent::GetMaxAmmoSecondary()
 {
-	WpProperties.CurrProjectile.mCurrAmmo = newCurrAmmo;
-	if (newCurrAmmo == 0)
+	return WpProperties.SecondaryProjectile.mMaxAmmo;
+}
+
+int UWeaponComponent::GetCurrentAmmo()
+{
+	return WpProperties.CurrentProjectile.mCurrentAmmo;
+}
+
+int UWeaponComponent::GetCurrentAmmoPrimary()
+{
+	return WpProperties.PrimaryProjectile.mCurrentAmmo;
+}
+
+int UWeaponComponent::GetCurrentAmmoSecondary()
+{
+	return WpProperties.SecondaryProjectile.mCurrentAmmo;
+}
+
+void UWeaponComponent::SetCurrentAmmo(int newCurrentAmmo)
+{
+	WpProperties.CurrentProjectile.mCurrentAmmo = newCurrentAmmo;
+	if (newCurrentAmmo == 0)
 	{
 		DoWhenAmmoIsEmpty();
 	}
 }
 
+void UWeaponComponent::SetCurrentAmmoPrimary(int newCurrentAmmo)
+{
+	WpProperties.PrimaryProjectile.mCurrentAmmo = newCurrentAmmo;
+}
+
+void UWeaponComponent::SetCurrentAmmoSecondary(int newCurrentAmmo)
+{
+	WpProperties.SecondaryProjectile.mCurrentAmmo = newCurrentAmmo;
+}
+
 int UWeaponComponent::GetAmmoPerShot()
 {
-	return WpProperties.CurrProjectile.mAmmoPerShot;
+	return WpProperties.CurrentProjectile.mAmmoPerShot;
 }
 
 void UWeaponComponent::SetAmmoPerShot(int newAmmoPerShot)
 {
-	WpProperties.CurrProjectile.mAmmoPerShot = newAmmoPerShot;
+	WpProperties.CurrentProjectile.mAmmoPerShot = newAmmoPerShot;
 }
 
 float UWeaponComponent::GetReloadTime()
 {
-	return WpProperties.CurrProjectile.mReloadTime;
+	return WpProperties.CurrentProjectile.mReloadTime;
 }
 
 void UWeaponComponent::SetReloadTime(float newReloadTime)
 {
-	WpProperties.CurrProjectile.mReloadTime = newReloadTime;
+	WpProperties.CurrentProjectile.mReloadTime = newReloadTime;
 }
 
 bool UWeaponComponent::CheckHaveEnoughAmmo()
 {
-	return GetAmmoPerShot() <= GetCurrAmmo();
+	return GetAmmoPerShot() <= GetCurrentAmmo();
 }
 
 UCurveFloat* UWeaponComponent::GetFloatCurveZoomInDelay()
 {
-	return WpProperties.CurrProjectile.FloatCurveZoomInDelay;
+	return WpProperties.CurrentProjectile.FloatCurveZoomInDelay;
 }
 
 bool UWeaponComponent::CheckIsAmmoFull()
 {
-	return WpProperties.CurrProjectile.mCurrAmmo == WpProperties.CurrProjectile.mMaxAmmo;
+	return WpProperties.CurrentProjectile.mCurrentAmmo == WpProperties.CurrentProjectile.mMaxAmmo;
 }
 
 float UWeaponComponent::GetZoomInDelay()
 {
-	return WpProperties.CurrProjectile.mZoomInDelay;
+	return WpProperties.CurrentProjectile.mZoomInDelay;
 }
 
 void UWeaponComponent::SetZoomInDelay(float newZoomInDelay)
 {
-	WpProperties.CurrProjectile.mZoomInDelay = newZoomInDelay;
+	WpProperties.CurrentProjectile.mZoomInDelay = newZoomInDelay;
 }
 
 float UWeaponComponent::GetZoomInMux()
 {
-	return WpProperties.CurrProjectile.mZoomInMux;
+	return WpProperties.CurrentProjectile.mZoomInMux;
 }
 
 void UWeaponComponent::SetZoomInMux(float newZoomInMux)
 {
-	WpProperties.CurrProjectile.mZoomInMux = newZoomInMux;
+	WpProperties.CurrentProjectile.mZoomInMux = newZoomInMux;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -176,12 +206,12 @@ void UWeaponComponent::SetZoomInMux(float newZoomInMux)
 
 void UWeaponComponent::ChangeAmmoToPrimary()
 {
-	WpProperties.CurrProjectile = WpProperties.PrimaryProjectile;
+	WpProperties.CurrentProjectile = WpProperties.PrimaryProjectile;
 }
 
 void UWeaponComponent::ChangeAmmoToSecondary()
 {
-	WpProperties.CurrProjectile = WpProperties.SecondaryProjectile;
+	WpProperties.CurrentProjectile = WpProperties.SecondaryProjectile;
 }
 
 void UWeaponComponent::ChangeAmmoType()
@@ -190,6 +220,7 @@ void UWeaponComponent::ChangeAmmoType()
 	{
 		if (CheckIsValidSecondaryAmmo())
 		{
+			WpProperties.PrimaryProjectile.mCurrentAmmo = WpProperties.CurrentProjectile.mCurrentAmmo;
 			ChangeAmmoToSecondary();
 		}
 	}
@@ -197,6 +228,7 @@ void UWeaponComponent::ChangeAmmoType()
 	{
 		if (CheckIsValidPrimaryAmmo())
 		{
+			WpProperties.SecondaryProjectile.mCurrentAmmo = WpProperties.CurrentProjectile.mCurrentAmmo;
 			ChangeAmmoToPrimary();
 		}
 	}
@@ -204,8 +236,6 @@ void UWeaponComponent::ChangeAmmoType()
 
 void UWeaponComponent::Shoot(FVector const& SpawnLocation, FRotator const& SpawnRotation)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "SHOOTING...");
-
 	UWorld* const World = GetWorld();
 	if (World)
 	{
@@ -240,32 +270,56 @@ void UWeaponComponent::Shoot(FVector const& SpawnLocation, FRotator const& Spawn
 			}
 		}
 
-		DecreaseCurrAmmo(GetAmmoPerShot());
+		DecreaseCurrentAmmo(GetAmmoPerShot());
 	}
 }
 
-void UWeaponComponent::IncreaseCurrAmmo(int ammount)
+void UWeaponComponent::IncreaseCurrentAmmo(int ammount)
 {
-	int newAmmoTemp = GetCurrAmmo() + ammount;
-	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
-	SetCurrAmmo(newAmmoTemp);
+	int newAmmoTemp = GetCurrentAmmo() + ammount;
+	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmoCurrent());
+	SetCurrentAmmo(newAmmoTemp);
 }
 
-void UWeaponComponent::DecreaseCurrAmmo(int ammount)
+void UWeaponComponent::IncreasePrimaryAmmo(int ammount)
 {
-	int newAmmoTemp = GetCurrAmmo() - ammount;
-	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
-	SetCurrAmmo(newAmmoTemp);
+	int newAmmoTemp = GetCurrentAmmoPrimary() + ammount;
+	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmoPrimary());
+	(newAmmoTemp);
 }
 
-void UWeaponComponent::RestoreFullAmmo()
+void UWeaponComponent::IncreaseSecondaryAmmo(int ammount)
 {
-	IncreaseCurrAmmo(GetMaxAmmo());
+	int newAmmoTemp = GetCurrentAmmoSecondary() + ammount;
+	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmoSecondary());
+	(newAmmoTemp);
+}
+
+void UWeaponComponent::DecreaseCurrentAmmo(int ammount)
+{
+	int newAmmoTemp = GetCurrentAmmo() - ammount;
+	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmoCurrent());
+	SetCurrentAmmo(newAmmoTemp);
+}
+
+void UWeaponComponent::RestoreFullAmmoCurrent()
+{
+	IncreaseCurrentAmmo(GetMaxAmmoCurrent());
+}
+
+void UWeaponComponent::RestoreFullAmmoPrimary()
+{
+	IncreasePrimaryAmmo(GetMaxAmmoPrimary());
+}
+
+void UWeaponComponent::RestoreFullAmmoSecondary()
+{
+	IncreaseSecondaryAmmo(GetMaxAmmoSecondary());
 }
 
 void UWeaponComponent::EmptyAmmo()
 {
-	DecreaseCurrAmmo(GetMaxAmmo());
+	DecreaseCurrentAmmo(GetMaxAmmoCurrent());
 }
 
 void UWeaponComponent::DoWhenAmmoIsEmpty()

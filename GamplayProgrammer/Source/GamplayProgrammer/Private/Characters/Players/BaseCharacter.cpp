@@ -66,7 +66,7 @@ ABaseCharacter::ABaseCharacter()
 	BaseCharacterMovementComponent = GetCharacterMovement();
 
 	// Create our weapon logic
-	BaseWeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("WeaponComp"));
+	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("WeaponComp"));
 }
 
 // Called when the game starts or when spawned
@@ -92,8 +92,8 @@ void ABaseCharacter::BeginPlay()
 
 void ABaseCharacter::SetupChProperties()
 {
-	SetCurrHealth(GetMaxHealth());
-	//SetCurrAmmo(GetMaxAmmo());
+	SetCurrentHealth(GetMaxHealth());
+	//SetCurrentAmmo(GetMaxAmmo());
 	SetDefaultSpeed(BaseCharacterMovementComponent->MaxWalkSpeed);
 	ResetCrouchSpeed();
 }
@@ -115,9 +115,9 @@ int ABaseCharacter::GetMaxHealth()
 	return ChProperties.mMaxHealth;
 }
 
-int ABaseCharacter::GetCurrHealth()
+int ABaseCharacter::GetCurrentHealth()
 {
-	return ChProperties.mCurrHealth;
+	return ChProperties.mCurrentHealth;
 }
 
 void ABaseCharacter::SetIsInvulnerable(bool newIsInvulnerable)
@@ -135,10 +135,10 @@ void ABaseCharacter::SetIsDying(bool newIsDying)
 	ChProperties.bIsDying = true;
 }
 
-void ABaseCharacter::SetCurrHealth(int newCurrHealth)
+void ABaseCharacter::SetCurrentHealth(int newCurrentHealth)
 {
-	ChProperties.mCurrHealth = newCurrHealth;
-	if (newCurrHealth == 0)
+	ChProperties.mCurrentHealth = newCurrentHealth;
+	if (newCurrentHealth == 0)
 	{
 		CustomCharacterDie();
 	}
@@ -148,11 +148,11 @@ void ABaseCharacter::CustomCharacterLoseHealth(int ammount)
 {
 	if (CheckCanLoseHealth())
 	{
-		int newHealthTemp = GetCurrHealth() - ammount;
+		int newHealthTemp = GetCurrentHealth() - ammount;
 		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
-		int tempCurrHealth = GetCurrHealth();
-		SetCurrHealth(newHealthTemp);
-		if (tempCurrHealth != GetCurrHealth())
+		int tempCurrentHealth = GetCurrentHealth();
+		SetCurrentHealth(newHealthTemp);
+		if (tempCurrentHealth != GetCurrentHealth())
 		{
 			// here should go the call to play the hurt anim
 			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "losing health anim...");
@@ -165,11 +165,11 @@ void ABaseCharacter::CustomCharacterGainHealth(int ammount)
 {
 	if (CheckCanGainHealth())
 	{
-		int newHealthTemp = GetCurrHealth() + ammount;
+		int newHealthTemp = GetCurrentHealth() + ammount;
 		newHealthTemp = FMath::Clamp(newHealthTemp, 0, GetMaxHealth());
-		int tempCurrHealth = GetCurrHealth();
-		SetCurrHealth(newHealthTemp);
-		if (tempCurrHealth != GetCurrHealth())
+		int tempCurrentHealth = GetCurrentHealth();
+		SetCurrentHealth(newHealthTemp);
+		if (tempCurrentHealth != GetCurrentHealth())
 		{
 			// here should go the call to play anim or effects of gaining health
 			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, "gaining health effect...");
@@ -227,12 +227,12 @@ float ABaseCharacter::GetDefaultSpeed()
 
 float ABaseCharacter::GetCurrentSpeed()
 {
-	return ChProperties.mCurrSpeed;
+	return ChProperties.mCurrentSpeed;
 }
 
 void ABaseCharacter::SetCurrentSpeed(float newSpeed)
 {
-	ChProperties.mCurrSpeed = newSpeed;
+	ChProperties.mCurrentSpeed = newSpeed;
 }
 
 float ABaseCharacter::GetRunSpeedMux()
@@ -265,15 +265,15 @@ int ABaseCharacter::GetMaxAmmo()
 	return ChProperties.mMaxAmmo;
 }
 
-int ABaseCharacter::GetCurrAmmo()
+int ABaseCharacter::GetCurrentAmmo()
 {
-	return ChProperties.mCurrAmmo;
+	return ChProperties.mCurrentAmmo;
 }
 
-void ABaseCharacter::SetCurrAmmo(int newCurrAmmo)
+void ABaseCharacter::SetCurrentAmmo(int newCurrentAmmo)
 {
-	ChProperties.mCurrAmmo = newCurrAmmo;
-	if (newCurrAmmo == 0)
+	ChProperties.mCurrentAmmo = newCurrentAmmo;
+	if (newCurrentAmmo == 0)
 	{
 		DoWhenAmmoIsEmpty();
 	}
@@ -291,16 +291,16 @@ void ABaseCharacter::SetAmmoPerShot(int newAmmoPerShot)
 
 void ABaseCharacter::DecreaseAmmo(int ammount)
 {
-	int newAmmoTemp = GetCurrAmmo() - ammount;
+	int newAmmoTemp = GetCurrentAmmo() - ammount;
 	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
-	SetCurrAmmo(newAmmoTemp);
+	SetCurrentAmmo(newAmmoTemp);
 }
 
 void ABaseCharacter::IncreaseAmmo(int ammount)
 {
-	int newAmmoTemp = GetCurrAmmo() + ammount;
+	int newAmmoTemp = GetCurrentAmmo() + ammount;
 	newAmmoTemp = FMath::Clamp(newAmmoTemp, 0, GetMaxAmmo());
-	SetCurrAmmo(newAmmoTemp);
+	SetCurrentAmmo(newAmmoTemp);
 }
 
 void ABaseCharacter::RestoreFullAmmo()
@@ -354,9 +354,9 @@ void ABaseCharacter::SetZoomInMux(float newZoomInMux)
 
 void ABaseCharacter::SetWalkSpeedOnZoomIn()
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		BaseCharacterMovementComponent->MaxWalkSpeed = BaseWeaponComponent->GetZoomInSpeedMux() * GetDefaultSpeed();
+		BaseCharacterMovementComponent->MaxWalkSpeed = WeaponComponent->GetZoomInSpeedMux() * GetDefaultSpeed();
 	}
 }
 
@@ -532,9 +532,9 @@ void ABaseCharacter::RestartSliding()
 
 void ABaseCharacter::CharacterChangeAmmoType()
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		BaseWeaponComponent->ChangeAmmoType();
+		WeaponComponent->ChangeAmmoType();
 		ZoomInTimelineSetup();
 	}
 }
@@ -569,9 +569,9 @@ void ABaseCharacter::ZoomOut()
 	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanZoomOut())
 	{
-		if (BaseWeaponComponent)
+		if (WeaponComponent)
 		{
-			SetWalkSpeedOnDiv(BaseWeaponComponent->GetZoomInSpeedMux());
+			SetWalkSpeedOnDiv(WeaponComponent->GetZoomInSpeedMux());
 		}
 		SetWalkSpeedOnCrouched();
 		if (ZoomInTimeline)
@@ -591,9 +591,9 @@ void ABaseCharacter::StartReloading()
 		ZoomOut();
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "reloading anim...");
 		
-		if (BaseWeaponComponent)
+		if (WeaponComponent)
 		{
-			float TempReloadTime = BaseWeaponComponent->GetReloadTime();
+			float TempReloadTime = WeaponComponent->GetReloadTime();
 			if (TempReloadTime > 0.0f)
 			{
 				FTimerHandle ReloadHandle;
@@ -612,9 +612,9 @@ void ABaseCharacter::StartReloading()
 void ABaseCharacter::StopReloading()
 {
 	// animations should access BaseCharacter Gets to play animations, instead of changing them here
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		BaseWeaponComponent->RestoreFullAmmo();
+		WeaponComponent->RestoreFullAmmoCurrent();
 	}
 	if (CheckCanStopReloading())
 	{
@@ -624,13 +624,13 @@ void ABaseCharacter::StopReloading()
 
 void ABaseCharacter::CharacterShoot()
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		if (BaseWeaponComponent->CheckIsValidCurrAmmo())
+		if (WeaponComponent->CheckIsValidCurrentAmmo())
 		{
 			if (!CheckIsReloading())
 			{
-				if (BaseWeaponComponent->CheckHaveEnoughAmmo())
+				if (WeaponComponent->CheckHaveEnoughAmmo())
 				{
 					UWorld* const World = GetWorld();
 					if (World)
@@ -640,7 +640,7 @@ void ABaseCharacter::CharacterShoot()
 						const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
 						// call weapon component shoot
-						BaseWeaponComponent->Shoot(SpawnLocation, SpawnRotation);
+						WeaponComponent->Shoot(SpawnLocation, SpawnRotation);
 					}
 				}
 				else
@@ -657,7 +657,7 @@ void ABaseCharacter::CharacterShoot()
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Base Weapon Component found.");
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Weapon Component found.");
 	}
 }
 
@@ -687,7 +687,7 @@ bool ABaseCharacter::CheckIsReloading()
 /*
 bool ABaseCharacter::CheckHaveEnoughAmmo()
 {
-	return GetAmmoPerShot() <= GetCurrAmmo();
+	return GetAmmoPerShot() <= GetCurrentAmmo();
 }
 */
 bool ABaseCharacter::CheckIsZoomingIn()
@@ -697,7 +697,7 @@ bool ABaseCharacter::CheckIsZoomingIn()
 
 bool ABaseCharacter::CheckIsAlive()
 {
-	return ChProperties.mCurrHealth > 0;
+	return ChProperties.mCurrentHealth > 0;
 }
 
 bool ABaseCharacter::CheckCanStartInvulnerability()
@@ -767,14 +767,14 @@ bool ABaseCharacter::CheckCanZoomOut()
 /*
 bool ABaseCharacter::CheckIsAmmoFull()
 {
-	return ChProperties.mCurrAmmo == ChProperties.mMaxAmmo;
+	return ChProperties.mCurrentAmmo == ChProperties.mMaxAmmo;
 }
 */
 bool ABaseCharacter::CheckCanStartReloading()
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		return !CheckIsReloading() && !BaseWeaponComponent->CheckIsAmmoFull();
+		return !CheckIsReloading() && !WeaponComponent->CheckIsAmmoFull();
 	}
 	else
 	{
@@ -785,9 +785,9 @@ bool ABaseCharacter::CheckCanStartReloading()
 
 bool ABaseCharacter::CheckCanStopReloading()
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		return CheckIsReloading() && BaseWeaponComponent->CheckIsAmmoFull();
+		return CheckIsReloading() && WeaponComponent->CheckIsAmmoFull();
 	}
 	else
 	{
@@ -814,14 +814,12 @@ void ABaseCharacter::SlidingDecayTimelineUpdate(float DeltaTime)
 {
 	if (SlidingDecayTimeline)
 	{
-		mTempDeltaTime = DeltaTime;
 		SlidingDecayTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
 	}
 }
 
 void ABaseCharacter::SlidingDecayTimelineCallback(float value)
 {
-	GEngine->AddOnScreenDebugMessage(-1, mTempDeltaTime, FColor::Yellow, "sliding...");
 	SetCrouchSpeedOnMux(value);
 }
 
@@ -880,26 +878,25 @@ void ABaseCharacter::SlidingDecayTimelineSetup()
 
 void ABaseCharacter::ZoomInTimelineUpdate(float DeltaTime)
 {
-	if (BaseWeaponComponent && ZoomInTimeline)
+	if (WeaponComponent && ZoomInTimeline)
 	{
-		mTempDeltaTime = DeltaTime;
 		ZoomInTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
 	}
 }
 
 void ABaseCharacter::ZoomInTimelineCallback(float value)
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		FirstPersonCameraComponent->FieldOfView = mOriginalFOV * (1 - (BaseWeaponComponent->GetZoomInMux() * value));
+		FirstPersonCameraComponent->FieldOfView = mOriginalFOV * (1 - (WeaponComponent->GetZoomInMux() * value));
 	}
 }
 
 void ABaseCharacter::ZoomInTimelineSetup()
 {
-	if (BaseWeaponComponent)
+	if (WeaponComponent)
 	{
-		UCurveFloat* TempZoomInCurveFloat = BaseWeaponComponent->GetFloatCurveZoomInDelay();
+		UCurveFloat* TempZoomInCurveFloat = WeaponComponent->GetFloatCurveZoomInDelay();
 		if (TempZoomInCurveFloat)
 		{
 			FOnTimelineFloat OnZoomInDelayTimelineCallback;
@@ -909,7 +906,7 @@ void ABaseCharacter::ZoomInTimelineSetup()
 
 			// we reasign dynamically the keypoints on the timeline to make it fit the zoom in delay //////////////////////////////////////////////////////////////////////////
 
-			float TempZoomInDelay = BaseWeaponComponent->GetZoomInDelay();
+			float TempZoomInDelay = WeaponComponent->GetZoomInDelay();
 			ZoomInTimeline->SetTimelineLength(TempZoomInDelay);
 
 			if (TempZoomInDelay > 0.0f)

@@ -26,7 +26,7 @@ public:
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Current Health")
-		int mCurrHealth;
+		int mCurrentHealth;
 
 	//
 	UPROPERTY(EditAnywhere, DisplayName = "Damage", meta = (ClampMin = "0", ClampMax = "10"))
@@ -63,14 +63,14 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		int GetCurrHealth();
+		int GetCurrentHealth();
 
 	//
 	UFUNCTION(BlueprintCallable)
 		int GetDamage();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetDamage(int newDamage);
 
 	//////////////////////////////////////////////////////////////////////////
@@ -113,7 +113,7 @@ private:
 
 	// 
 	UFUNCTION()
-		void SetCurrHealth(int newCurrHealth);
+		void SetCurrentHealth(int newCurrentHealth);
 
 	//////////////////////////////////////////////////////////////////////////
 

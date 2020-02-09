@@ -36,7 +36,7 @@ public:
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo")
-		int mCurrAmmo;
+		int mCurrentAmmo;
 
 	//
 	UPROPERTY(EditAnywhere, DisplayName = "Ammo Per Shot")
@@ -65,7 +65,7 @@ public:
 	UPROPERTY(EditAnywhere, DisplayName = "ZoomIn Delay", meta = (ClampMin = "0", ClampMax = "2"))
 		float mZoomInDelay = 0.2f;
 
-	// all properties (except current ammo) must be the same to consider two weapons the same weapon
+	// all properties (except Current ammo) must be the same to consider two weapons the same weapon
 	bool operator==(const FAmmoProperties& other) const 
 	{
 		return (ProjectileType == other.ProjectileType) && (mMaxAmmo == other.mMaxAmmo) && 
@@ -83,7 +83,7 @@ public:
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo Type")
-		FAmmoProperties CurrProjectile;
+		FAmmoProperties CurrentProjectile;
 
 	//
 	UPROPERTY(EditAnywhere, DisplayName = "Primary Ammo Type")
@@ -113,7 +113,7 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		bool CheckIsValidCurrAmmo();
+		bool CheckIsValidCurrentAmmo();
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -132,7 +132,7 @@ public:
 		UAnimMontage* GetFireAnimation();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetProjectileToSpawn(TSubclassOf<class ABaseProjectile> newProjectileToSpawn);
 
 	//
@@ -141,18 +141,34 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		int GetMaxAmmo();
+		int GetMaxAmmoCurrent();
 
 	//
 	UFUNCTION(BlueprintCallable)
-		int GetCurrAmmo();
+		int GetMaxAmmoPrimary();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetMaxAmmoSecondary();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrentAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrentAmmoPrimary();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrentAmmoSecondary();
 
 	//
 	UFUNCTION(BlueprintCallable)
 		int GetAmmoPerShot();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetAmmoPerShot(int newAmmoPerShot = 1);
 
 	//
@@ -160,7 +176,7 @@ public:
 		float GetReloadTime();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetReloadTime(float newReloadTime);
 
 	//
@@ -168,7 +184,7 @@ public:
 		float GetZoomInDelay();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetZoomInDelay(float newZoomInDelay);
 
 	//
@@ -176,7 +192,7 @@ public:
 		float GetZoomInMux();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetZoomInMux(float newZoomInMux);
 
 	//
@@ -205,15 +221,31 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		void IncreaseCurrAmmo(int ammount);
+		void IncreaseCurrentAmmo(int ammount);
 
 	//
 	UFUNCTION(BlueprintCallable)
-		void DecreaseCurrAmmo(int ammount);
+		void DecreaseCurrentAmmo(int ammount);
 
 	//
 	UFUNCTION(BlueprintCallable)
-		void RestoreFullAmmo();
+		void IncreasePrimaryAmmo(int ammount);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void IncreaseSecondaryAmmo(int ammount);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void RestoreFullAmmoCurrent();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void RestoreFullAmmoPrimary();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void RestoreFullAmmoSecondary();
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -261,7 +293,15 @@ private:
 
 	// we set this private to avoid problems
 	UFUNCTION()
-		void SetCurrAmmo(int newCurrAmmo);
+		void SetCurrentAmmo(int newCurrentAmmo);
+
+	// we set this private to avoid problems
+	UFUNCTION()
+		void SetCurrentAmmoPrimary(int newCurrentAmmo);
+
+	// we set this private to avoid problems
+	UFUNCTION()
+		void SetCurrentAmmoSecondary(int newCurrentAmmo);
 
 	//
 	UFUNCTION()

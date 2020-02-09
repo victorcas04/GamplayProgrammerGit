@@ -38,7 +38,7 @@ public:
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Current Health")
-		int mCurrHealth;
+		int mCurrentHealth;
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Is Running")
@@ -62,7 +62,7 @@ public:
 
 	//
 	UPROPERTY(VisibleAnywhere, DisplayName = "Current Speed")
-		float mCurrSpeed;
+		float mCurrentSpeed;
 
 	// 1.0 = no extra speed while running
 	// 10.0 = max extra speed while running
@@ -95,7 +95,7 @@ public:
 
 	// REM
 	UPROPERTY(VisibleAnywhere, DisplayName = "Current Ammo")
-		int mCurrAmmo;
+		int mCurrentAmmo;
 
 	// REM
 	UPROPERTY(EditAnywhere, DisplayName = "Ammo Per Shot")
@@ -158,7 +158,7 @@ public:
 		float GetInvulnerableTime();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetInvulnerableTime(float newInvulnerableTime);
 
 	//
@@ -167,14 +167,14 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		int GetCurrHealth();
+		int GetCurrentHealth();
 
 	//
 	UFUNCTION(BlueprintCallable)
 		float GetMaxSlidingTime();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetMaxSlidingTime(float newSlidingTime);
 
 	//
@@ -203,7 +203,7 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable)
-		int GetCurrAmmo();
+		int GetCurrentAmmo();
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -391,7 +391,7 @@ public:
 
 	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class UWeaponComponent* BaseWeaponComponent;
+		class UWeaponComponent* WeaponComponent;
 
 	/** Gun mesh: 1st person view (seen only by self) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -501,10 +501,6 @@ private:
 
 	//
 	UPROPERTY()
-		float mTempDeltaTime;
-
-	//
-	UPROPERTY()
 		float mOriginalFOV;
 
 	//
@@ -520,7 +516,7 @@ private:
 
 	// 
 	UFUNCTION()
-		void SetCurrHealth(int newCurrHealth);
+		void SetCurrentHealth(int newCurrentHealth);
 
 	// 
 	UFUNCTION()
@@ -544,7 +540,7 @@ private:
 	/*
 	// 
 	UFUNCTION()
-		void SetCurrAmmo(int newCurrAmmo);
+		void SetCurrentAmmo(int newCurrentAmmo);
 	*/
 	//////////////////////////////////////////////////////////////////////////
 

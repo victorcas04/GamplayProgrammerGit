@@ -56,8 +56,8 @@ public:
 		int mMaxBounces = 1;
 
 	//
-	UPROPERTY(VisibleAnywhere, DisplayName = "Curr Bounces")
-		int mCurrBounces;
+	UPROPERTY(VisibleAnywhere, DisplayName = "Current Bounces")
+		int mCurrentBounces;
 
 	// time to add to lifespan after a bounce
 	UPROPERTY(EditAnywhere, DisplayName = "Extra Time Per Bounce", meta = (ClampMin = "0", ClampMax = "5", EditCondition = "bCanBounce"))
@@ -115,7 +115,7 @@ public:
 		int GetDamage();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetDamage(int newDamage);
 
 	//
@@ -123,7 +123,7 @@ public:
 		float GetLifeTime();
 	
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetLifeTime(float newTimeOfLife);
 
 	//
@@ -131,7 +131,7 @@ public:
 		float GetLifeTimeRemaining();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetLifeTimeRemaining(float newTimeOfLifeRemaining);
 
 	//
@@ -139,7 +139,7 @@ public:
 		float GetFallOff();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetFallOff(float newFallOff);
 
 	//
@@ -147,7 +147,7 @@ public:
 		bool CheckCanBounce();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetCanBounce(bool newShouldBounce = true);
 
 	//
@@ -155,19 +155,19 @@ public:
 		int GetMaxBounces();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetMaxBounces(int newMaxBounces = 1);
 
 	//
 	UFUNCTION(BlueprintCallable)
-		int GetCurrBounces();
+		int GetCurrentBounces();
 
 	//
 	UFUNCTION(BlueprintCallable)
 		float GetExtraTimePerBounce();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetExtraTimePerBounce(float newExtraTimePerBounce = 1);
 
 	//
@@ -175,7 +175,7 @@ public:
 		bool CheckCanSelfDamage();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetCanSelfDamage(bool newCanSelfDamage = true);
 
 	//
@@ -183,7 +183,7 @@ public:
 		bool CheckCanStepOnIt();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetCanStepOnIt(bool newCanStepOnIt = true);
 
 	//
@@ -191,7 +191,7 @@ public:
 		bool CheckShouldBeDestroyedOncontact();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetShouldBeDestroyedOncontact(bool newShouldBeDestroyedOnContact = true);
 
 	//
@@ -199,7 +199,7 @@ public:
 		float GetProjectileSpeed();
 
 	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintSetter)
 		void SetProjectileSpeed(float newProjectileSpeed);
 
 	//////////////////////////////////////////////////////////////////////////
@@ -263,6 +263,6 @@ private:
 
 	//
 	UFUNCTION()
-		void SetCurrBounces(int newCurrBounces = 1);
+		void SetCurrentBounces(int newCurrentBounces = 1);
 };
 
