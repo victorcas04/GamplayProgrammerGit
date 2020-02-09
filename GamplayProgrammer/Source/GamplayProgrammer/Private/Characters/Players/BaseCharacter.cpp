@@ -83,6 +83,7 @@ void ABaseCharacter::BeginPlay()
 
 	// Timelines setup
 	SlidingDecayTimelineSetup();
+	// components are initialized before the begin play of the actor, so we don't have problems using weapon variables here
 	ZoomInTimelineSetup();
 
 	// need to do this here instead of the constructor because it gets overrided by unreal on play
@@ -92,7 +93,7 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::SetupChProperties()
 {
 	SetCurrHealth(GetMaxHealth());
-	SetCurrAmmo(GetMaxAmmo());
+	//SetCurrAmmo(GetMaxAmmo());
 	SetDefaultSpeed(BaseCharacterMovementComponent->MaxWalkSpeed);
 	ResetCrouchSpeed();
 }
@@ -243,12 +244,12 @@ float ABaseCharacter::GetCrouchSpeedMux()
 {
 	return ChProperties.mCrouchSpeedMux;
 }
-
+/*
 float ABaseCharacter::GetZoomInSpeedMux()
 {
 	return ChProperties.mZoomInSpeedMux;
 }
-
+*/
 void ABaseCharacter::SetIsReloading(bool newIsReloading)
 {
 	ChProperties.bIsReloading = newIsReloading;
@@ -258,7 +259,7 @@ void ABaseCharacter::SetIsZoomingIn(bool newIsZoomingIn)
 {
 	ChProperties.bIsZoomingIn = newIsZoomingIn;
 }
-
+/*
 int ABaseCharacter::GetMaxAmmo()
 {
 	return ChProperties.mMaxAmmo;
@@ -346,14 +347,17 @@ void ABaseCharacter::SetZoomInMux(float newZoomInMux)
 {
 	ChProperties.mZoomInMux = newZoomInMux;
 }
-
+*/
 //////////////////////////////////////////////////////////////////////////
 
 // SPEED RELATED FUNCTIONS //////////////////////////////////////////////////////////////////////////
 
 void ABaseCharacter::SetWalkSpeedOnZoomIn()
 {
-	BaseCharacterMovementComponent->MaxWalkSpeed = GetZoomInSpeedMux() * GetDefaultSpeed();
+	if (BaseWeaponComponent)
+	{
+		BaseCharacterMovementComponent->MaxWalkSpeed = BaseWeaponComponent->GetZoomInSpeedMux() * GetDefaultSpeed();
+	}
 }
 
 void ABaseCharacter::SetWalkSpeedOnCrouched()
@@ -391,13 +395,22 @@ void ABaseCharacter::StartInvulnerability()
 	{
 		SetIsInvulnerable();
 
-		// here should go the call to play anim or effects of invulnerability
-		GEngine->AddOnScreenDebugMessage(-1, GetInvulnerableTime(), FColor::Yellow, "INVULNERABLE");
+		float TempInvulnerableTime = GetInvulnerableTime();
 
-		FTimerHandle InvulnerableHandle;
-		FTimerDelegate InvulnerableDelegate;
-		InvulnerableDelegate.BindUFunction(this, TEXT("StopInvulnerability"));
-		GetWorld()->GetTimerManager().SetTimer(InvulnerableHandle, InvulnerableDelegate, GetInvulnerableTime(), false);
+		if (TempInvulnerableTime > 0.0f)
+		{
+			// here should go the call to play anim or effects of invulnerability
+			GEngine->AddOnScreenDebugMessage(-1, TempInvulnerableTime, FColor::Yellow, "INVULNERABLE");
+
+			FTimerHandle InvulnerableHandle;
+			FTimerDelegate InvulnerableDelegate;
+			InvulnerableDelegate.BindUFunction(this, TEXT("StopInvulnerability"));
+			GetWorld()->GetTimerManager().SetTimer(InvulnerableHandle, InvulnerableDelegate, TempInvulnerableTime, false);
+		}
+		else
+		{
+			StopInvulnerability();
+		}
 	}
 }
 
@@ -517,6 +530,15 @@ void ABaseCharacter::RestartSliding()
 	ResetCrouchSpeed();
 }
 
+void ABaseCharacter::CharacterChangeAmmoType()
+{
+	if (BaseWeaponComponent)
+	{
+		BaseWeaponComponent->ChangeAmmoType();
+		ZoomInTimelineSetup();
+	}
+}
+
 void ABaseCharacter::ZoomIn()
 {
 	// animations should access BaseCharacter Gets to play animations, instead of changing them here
@@ -547,7 +569,10 @@ void ABaseCharacter::ZoomOut()
 	// animations should access BaseCharacter Gets to play animations, instead of changing them here
 	if (CheckCanZoomOut())
 	{
-		SetWalkSpeedOnDiv(GetZoomInSpeedMux());
+		if (BaseWeaponComponent)
+		{
+			SetWalkSpeedOnDiv(BaseWeaponComponent->GetZoomInSpeedMux());
+		}
 		SetWalkSpeedOnCrouched();
 		if (ZoomInTimeline)
 		{
@@ -566,28 +591,34 @@ void ABaseCharacter::StartReloading()
 		ZoomOut();
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "reloading anim...");
 		
-		FTimerHandle ReloadHandle;
-		FTimerDelegate ReloadDelegate;
-		ReloadDelegate.BindUFunction(this, TEXT("StopReloading"));
-		GetWorld()->GetTimerManager().SetTimer(ReloadHandle, ReloadDelegate, GetReloadTime(), false);
+		if (BaseWeaponComponent)
+		{
+			float TempReloadTime = BaseWeaponComponent->GetReloadTime();
+			if (TempReloadTime > 0.0f)
+			{
+				FTimerHandle ReloadHandle;
+				FTimerDelegate ReloadDelegate;
+				ReloadDelegate.BindUFunction(this, TEXT("StopReloading"));
+				GetWorld()->GetTimerManager().SetTimer(ReloadHandle, ReloadDelegate, TempReloadTime, false);
+			}
+			else
+			{
+				StopReloading();
+			}
+		}
 	}
 }
 
 void ABaseCharacter::StopReloading()
 {
 	// animations should access BaseCharacter Gets to play animations, instead of changing them here
-	RestoreFullAmmo();
+	if (BaseWeaponComponent)
+	{
+		BaseWeaponComponent->RestoreFullAmmo();
+	}
 	if (CheckCanStopReloading())
 	{
 		SetIsReloading(false);
-	}
-}
-
-void ABaseCharacter::tempChangeAmmo()
-{
-	if (BaseWeaponComponent)
-	{
-		BaseWeaponComponent->ChangeAmmoType();
 	}
 }
 
@@ -597,7 +628,7 @@ void ABaseCharacter::OnFire()
 	{
 		BaseWeaponComponent->Shoot();
 	}
-
+	/*
 	if (!CheckIsReloading())
 	{
 		if (CheckHaveEnoughAmmo())
@@ -653,6 +684,7 @@ void ABaseCharacter::OnFire()
 			StartReloading();
 		}
 	}
+	*/
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -678,12 +710,12 @@ bool ABaseCharacter::CheckIsReloading()
 {
 	return ChProperties.bIsReloading;
 }
-
+/*
 bool ABaseCharacter::CheckHaveEnoughAmmo()
 {
 	return GetAmmoPerShot() <= GetCurrAmmo();
 }
-
+*/
 bool ABaseCharacter::CheckIsZoomingIn()
 {
 	return ChProperties.bIsZoomingIn;
@@ -758,20 +790,35 @@ bool ABaseCharacter::CheckCanZoomOut()
 {
 	return CheckIsZoomingIn();
 }
-
+/*
 bool ABaseCharacter::CheckIsAmmoFull()
 {
 	return ChProperties.mCurrAmmo == ChProperties.mMaxAmmo;
 }
-
+*/
 bool ABaseCharacter::CheckCanStartReloading()
 {
-	return !CheckIsReloading() && !CheckIsAmmoFull();
+	if (BaseWeaponComponent)
+	{
+		return !CheckIsReloading() && !BaseWeaponComponent->CheckIsAmmoFull();
+	}
+	else
+	{
+		// if we don't have a weapon, cannot reload it
+		return false;
+	}
 }
 
 bool ABaseCharacter::CheckCanStopReloading()
 {
-	return CheckIsReloading() && CheckIsAmmoFull();
+	if (BaseWeaponComponent)
+	{
+		return CheckIsReloading() && BaseWeaponComponent->CheckIsAmmoFull();
+	}
+	else
+	{
+		return CheckIsReloading();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -859,7 +906,7 @@ void ABaseCharacter::SlidingDecayTimelineSetup()
 
 void ABaseCharacter::ZoomInTimelineUpdate(float DeltaTime)
 {
-	if (ZoomInTimeline)
+	if (BaseWeaponComponent && ZoomInTimeline)
 	{
 		mTempDeltaTime = DeltaTime;
 		ZoomInTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
@@ -868,52 +915,65 @@ void ABaseCharacter::ZoomInTimelineUpdate(float DeltaTime)
 
 void ABaseCharacter::ZoomInTimelineCallback(float value)
 {
-	FirstPersonCameraComponent->FieldOfView = mOriginalFOV * (1 - (GetZoomInMux() * value));
+	if (BaseWeaponComponent)
+	{
+		FirstPersonCameraComponent->FieldOfView = mOriginalFOV * (1 - (BaseWeaponComponent->GetZoomInMux() * value));
+	}
 }
 
 void ABaseCharacter::ZoomInTimelineSetup()
 {
-	if (FloatCurveZoomInDelay)
+	if (BaseWeaponComponent)
 	{
-		FOnTimelineFloat OnZoomInDelayTimelineCallback;
-
-		ZoomInTimeline = NewObject<UTimelineComponent>(this, FName("ZoomInDelayTimelineAnimation"));
-		ZoomInTimeline->SetLooping(false);
-
-		// we reasign dynamically the keypoints on the timeline to make it fit the zoom in delay //////////////////////////////////////////////////////////////////////////
-
-		ZoomInTimeline->SetTimelineLength(GetZoomInDelay());
-
-		if (GetZoomInDelay() > 0.0f)
+		UCurveFloat* TempZoomInCurveFloat = BaseWeaponComponent->GetFloatCurveZoomInDelay();
+		if (TempZoomInCurveFloat)
 		{
-			float OldTimeBeginTransition; float OldTimeEndTransition;
-			FloatCurveZoomInDelay->FloatCurve.GetTimeRange(OldTimeBeginTransition, OldTimeEndTransition);
+			FOnTimelineFloat OnZoomInDelayTimelineCallback;
 
-			float ratioTemp = GetZoomInDelay() / OldTimeEndTransition;
+			ZoomInTimeline = NewObject<UTimelineComponent>(this, FName("ZoomInDelayTimelineAnimation"));
+			ZoomInTimeline->SetLooping(false);
 
-			TArray<FRichCurveKey> CopyOfKeys = FloatCurveZoomInDelay->FloatCurve.GetCopyOfKeys();
-			FloatCurveZoomInDelay->FloatCurve.Reset();
-			for (FRichCurveKey k : CopyOfKeys)
+			// we reasign dynamically the keypoints on the timeline to make it fit the zoom in delay //////////////////////////////////////////////////////////////////////////
+
+			float TempZoomInDelay = BaseWeaponComponent->GetZoomInDelay();
+			ZoomInTimeline->SetTimelineLength(TempZoomInDelay);
+
+			if (TempZoomInDelay > 0.0f)
 			{
-				FRichCurveKey key = FRichCurveKey(k.Time * ratioTemp, k.Value);
-				key.InterpMode = k.InterpMode;
-				key.TangentMode = k.TangentMode;
-				FloatCurveZoomInDelay->FloatCurve.AddKey(key.Time, key.Value);
+				float OldTimeBeginTransition; float OldTimeEndTransition;
+				TempZoomInCurveFloat->FloatCurve.GetTimeRange(OldTimeBeginTransition, OldTimeEndTransition);
+
+				float ratioTemp = TempZoomInDelay / OldTimeEndTransition;
+
+				TArray<FRichCurveKey> CopyOfKeys = TempZoomInCurveFloat->FloatCurve.GetCopyOfKeys();
+				TempZoomInCurveFloat->FloatCurve.Reset();
+				for (FRichCurveKey k : CopyOfKeys)
+				{
+					FRichCurveKey key = FRichCurveKey(k.Time * ratioTemp, k.Value);
+					key.InterpMode = k.InterpMode;
+					key.TangentMode = k.TangentMode;
+					TempZoomInCurveFloat->FloatCurve.AddKey(key.Time, key.Value);
+				}
 			}
+
+			//////////////////////////////////////////////////////////////////////////
+
+			OnZoomInDelayTimelineCallback.BindUFunction(this, FName{ TEXT("ZoomInTimelineCallback") });
+			ZoomInTimeline->AddInterpFloat(TempZoomInCurveFloat, OnZoomInDelayTimelineCallback);
+
+			ZoomInTimeline->RegisterComponent();
 		}
-
-		//////////////////////////////////////////////////////////////////////////
-
-		OnZoomInDelayTimelineCallback.BindUFunction(this, FName{ TEXT("ZoomInTimelineCallback") });
-		ZoomInTimeline->AddInterpFloat(FloatCurveZoomInDelay, OnZoomInDelayTimelineCallback);
-
-		ZoomInTimeline->RegisterComponent();
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "ERROR: no ZoomIn Delay assigned.");
+		}
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "ERROR: no ZoomIn Delay Assigned assigned.");
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "ERROR: no Weapon Component assigned.");
 	}
 }
+
 //////////////////////////////////////////////////////////////////////////
 
 // CAMERA //////////////////////////////////////////////////////////////////////////

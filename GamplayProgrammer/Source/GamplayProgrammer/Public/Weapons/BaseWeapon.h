@@ -19,6 +19,10 @@ public:
 		EProjectileTypes ProjectileType = EProjectileTypes::E_NORMAL;
 
 	//
+	UPROPERTY(EditAnywhere, DisplayName = "Projectile To Spawn")
+		TSubclassOf<class ABaseProjectile> ProjectileToSpawn;
+
+	//
 	UPROPERTY(EditAnywhere, DisplayName = "Max Ammo", meta = (ClampMin = "0", ClampMax = "100"))
 		int mMaxAmmo = 100;
 
@@ -30,9 +34,34 @@ public:
 	UPROPERTY(EditAnywhere, DisplayName = "Ammo Per Shot")
 		int mAmmoPerShot = 1;
 
+	//
+	UPROPERTY(EditAnywhere, DisplayName = "ReloadTime", meta = (ClampMin = "0", ClampMax = "10"))
+		float mReloadTime = 2.0f;
+
+	//
+	UPROPERTY(EditAnywhere, DisplayName = "ZoomIn Delay Curve")
+		UCurveFloat* FloatCurveZoomInDelay;
+
+	// 0.1 = max slow down when zooming in
+	// 1.0 = no slow down when zooming in
+	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn Speed", meta = (ClampMin = "0.1", ClampMax = "1"))
+		float mZoomInSpeedMux = 0.2f;
+
+	// 0.0 = no zoom
+	// 0.9 = max zoom
+	UPROPERTY(EditAnywhere, DisplayName = "Mux ZoomIn", meta = (ClampMin = "0", ClampMax = "0.9"))
+		float mZoomInMux = 0.4f;
+
+	// 0.0 = instant zoom in
+	// 2.0 = it'll take 2 secs to zoom in
+	UPROPERTY(EditAnywhere, DisplayName = "ZoomIn Delay", meta = (ClampMin = "0", ClampMax = "2"))
+		float mZoomInDelay = 0.2f;
+
+	// all properties (except current ammo) must be the same to consider two weapons the same weapon
 	bool operator==(const FAmmoProperties& other) const 
 	{
-		return (ProjectileType == other.ProjectileType) && (mMaxAmmo == other.mMaxAmmo) && (mAmmoPerShot == other.mAmmoPerShot);
+		return (ProjectileType == other.ProjectileType) && (mMaxAmmo == other.mMaxAmmo) && 
+			(mAmmoPerShot == other.mAmmoPerShot) && (mReloadTime == other.mReloadTime) && (mZoomInMux == other.mZoomInMux);
 	}
 
 };
@@ -86,25 +115,101 @@ public:
 	UFUNCTION(BlueprintCallable)
 		bool CheckIsPrimaryAmmoType();
 
+	//
+	UFUNCTION(BlueprintCallable)
+		TSubclassOf<class ABaseProjectile> GetProjectileToSpawn();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetProjectileToSpawn(TSubclassOf<class ABaseProjectile> newProjectileToSpawn);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetZoomInSpeedMux();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetMaxAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetCurrAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		int GetAmmoPerShot();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetAmmoPerShot(int newAmmoPerShot = 1);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetReloadTime();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetReloadTime(float newReloadTime);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetZoomInDelay();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetZoomInDelay(float newZoomInDelay);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		float GetZoomInMux();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void SetZoomInMux(float newZoomInMux);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		bool CheckIsAmmoFull();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		bool CheckHaveEnoughAmmo();
+
 	//////////////////////////////////////////////////////////////////////////
+
+	//
+	UFUNCTION()
+		UCurveFloat* GetFloatCurveZoomInDelay();
 
 	// MAIN ACTIONS //////////////////////////////////////////////////////////////////////////
 
 	//
-	UFUNCTION(BlueprintCallable)
-		void SetCurrAmmoToSecondary();
-
-	//
-	UFUNCTION(BlueprintCallable)
-		void SetCurrAmmoToPrimary();
-
-	//
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 		void ChangeAmmoType();
 
 	//
 	UFUNCTION(BlueprintCallable)
 		void Shoot();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void IncreaseCurrAmmo(int ammount);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void DecreaseCurrAmmo(int ammount);
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void RestoreFullAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void EmptyAmmo();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void DoWhenAmmoIsEmpty();
 
 	//////////////////////////////////////////////////////////////////////////
 
@@ -137,5 +242,17 @@ private:
 	//
 	UFUNCTION()
 		void SetupWpProperties();
-	
+
+	// we set this private to avoid problems
+	UFUNCTION()
+		void SetCurrAmmo(int newCurrAmmo);
+
+	//
+	UFUNCTION()
+		void ChangeAmmoToSecondary();
+
+	//
+	UFUNCTION()
+		void ChangeAmmoToPrimary();
+
 };
