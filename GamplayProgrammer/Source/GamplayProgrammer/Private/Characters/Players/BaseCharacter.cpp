@@ -622,69 +622,43 @@ void ABaseCharacter::StopReloading()
 	}
 }
 
-void ABaseCharacter::OnFire()
+void ABaseCharacter::CharacterShoot()
 {
 	if (BaseWeaponComponent)
 	{
-		BaseWeaponComponent->Shoot();
-	}
-	/*
-	if (!CheckIsReloading())
-	{
-		if (CheckHaveEnoughAmmo())
+		if (BaseWeaponComponent->CheckIsValidCurrAmmo())
 		{
-			// try and fire a projectile
-			if (ProjectileClass != NULL)
+			if (!CheckIsReloading())
 			{
-				UWorld* const World = GetWorld();
-				if (World != NULL)
+				if (BaseWeaponComponent->CheckHaveEnoughAmmo())
 				{
-					const FRotator SpawnRotation = GetControlRotation();
-					// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-					const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-					//Set Spawn Collision Handling Override
-					FActorSpawnParameters ActorSpawnParams;
-					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-					// spawn the projectile at the muzzle
-					ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-					if (ProjectileSpawned)
+					UWorld* const World = GetWorld();
+					if (World)
 					{
-						ProjectileSpawned->SetBaseChOwner(this);
-					}
-					DecreaseAmmo(GetAmmoPerShot());
-				}
+						const FRotator SpawnRotation = GetControlRotation();
+						// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+						const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
-				// try and play the sound if specified
-				if (FireSound != NULL)
-				{
-					UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-				}
-
-				// try and play a firing animation if specified
-				if (FireAnimation != NULL)
-				{
-					// Get the animation object for the arms mesh
-					UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-					if (AnimInstance != NULL)
-					{
-						AnimInstance->Montage_Play(FireAnimation, 1.f);
+						// call weapon component shoot
+						BaseWeaponComponent->Shoot(SpawnLocation, SpawnRotation);
 					}
 				}
-			}
-			else
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Projectile Class assigned.");
+				else
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "WARNING: not enough ammo.");
+					StartReloading();
+				}
 			}
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "WARNING: not enough ammo.");
-			StartReloading();
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Projectile Class assigned.");
 		}
 	}
-	*/
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Base Weapon Component found.");
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -319,7 +319,7 @@ public:
 
 	/** Fires a projectile. */
 	UFUNCTION(BlueprintCallable)
-		void OnFire();
+		void CharacterShoot();
 	/*
 	//
 	UFUNCTION(BlueprintCallable)
@@ -414,13 +414,13 @@ public:
 	// TODO FROM HERE
 
 	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class USoundBase* FireSound;
-
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		class USoundBase* FireSound;*/
+	
 	/** AnimMontage to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class UAnimMontage* FireAnimation;
-
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+		class UAnimMontage* FireAnimation;*/
+	
 	//////////////////////////////////////////////////////////////////////////
 
 	// CAMERA //////////////////////////////////////////////////////////////////////////

@@ -22,6 +22,14 @@ void UWeaponComponent::BeginPlay()
 
 	//
 	SetupWpProperties();
+
+	//
+	OwnerAsCharacter = dynamic_cast<ABaseCharacter*>(GetOwner());
+}
+
+ABaseCharacter * UWeaponComponent::GetOwnerAsCharacter()
+{
+	return OwnerAsCharacter;
 }
 
 void UWeaponComponent::SetupWpProperties()
@@ -66,6 +74,16 @@ bool UWeaponComponent::CheckIsPrimaryAmmoType()
 TSubclassOf<class ABaseProjectile> UWeaponComponent::GetProjectileToSpawn()
 {
 	return WpProperties.CurrProjectile.ProjectileToSpawn;
+}
+
+USoundBase* UWeaponComponent::GetFireSound()
+{
+	return WpProperties.CurrProjectile.FireSound;
+}
+
+UAnimMontage * UWeaponComponent::GetFireAnimation()
+{
+	return WpProperties.CurrProjectile.FireAnimation;
 }
 
 void UWeaponComponent::SetProjectileToSpawn(TSubclassOf<class ABaseProjectile> newProjectileToSpawn)
@@ -184,9 +202,46 @@ void UWeaponComponent::ChangeAmmoType()
 	}
 }
 
-void UWeaponComponent::Shoot()
+void UWeaponComponent::Shoot(FVector const& SpawnLocation, FRotator const& SpawnRotation)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "SHOOTING...");
+
+	UWorld* const World = GetWorld();
+	if (World)
+	{
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+		// spawn the projectile at the muzzle
+		ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(GetProjectileToSpawn(), SpawnLocation, SpawnRotation, ActorSpawnParams);
+		if (ProjectileSpawned)
+		{
+			ProjectileSpawned->SetBaseChOwner(OwnerAsCharacter);
+		}
+
+		// try and play the sound if specified
+		if (GetFireSound())
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, GetFireSound(), OwnerAsCharacter->GetActorLocation());
+		}
+
+		// try and play a firing animation if specified
+		if (GetFireAnimation())
+		{
+			// Get the animation object for the arms mesh
+			if (OwnerAsCharacter)
+			{
+				UAnimInstance* AnimInstance = OwnerAsCharacter->GetMesh1P()->GetAnimInstance();
+				if (AnimInstance)
+				{
+					AnimInstance->Montage_Play(GetFireAnimation(), 1.f);
+				}
+			}
+		}
+
+		DecreaseCurrAmmo(GetAmmoPerShot());
+	}
 }
 
 void UWeaponComponent::IncreaseCurrAmmo(int ammount)
@@ -215,10 +270,9 @@ void UWeaponComponent::EmptyAmmo()
 
 void UWeaponComponent::DoWhenAmmoIsEmpty()
 {
-	ABaseCharacter* TempChOwner = dynamic_cast<ABaseCharacter*>(GetOwner());
-	if (TempChOwner)
+	if (OwnerAsCharacter)
 	{
-		TempChOwner->StartReloading();
+		OwnerAsCharacter->StartReloading();
 	}
 }
 

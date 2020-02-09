@@ -22,6 +22,14 @@ public:
 	UPROPERTY(EditAnywhere, DisplayName = "Projectile To Spawn")
 		TSubclassOf<class ABaseProjectile> ProjectileToSpawn;
 
+	/** Sound to play each time we fire */
+	UPROPERTY(EditAnywhere, Category = "Fire Sound")
+		class USoundBase* FireSound;
+
+	/** AnimMontage to play each time we fire */
+	UPROPERTY(EditAnywhere, Category = "Fire Animation")
+		class UAnimMontage* FireAnimation;
+
 	//
 	UPROPERTY(EditAnywhere, DisplayName = "Max Ammo", meta = (ClampMin = "0", ClampMax = "100"))
 		int mMaxAmmo = 100;
@@ -97,13 +105,9 @@ public:
 	// Sets default values for this component's properties
 	UWeaponComponent();
 
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class USoundBase* FireSound;
-
-	/** AnimMontage to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-		class UAnimMontage* FireAnimation;
+	//
+	UFUNCTION(BlueprintCallable)
+		ABaseCharacter* GetOwnerAsCharacter();
 
 	// WEAPON PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
 
@@ -118,6 +122,14 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		TSubclassOf<class ABaseProjectile> GetProjectileToSpawn();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		USoundBase* GetFireSound();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		UAnimMontage* GetFireAnimation();
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -188,8 +200,8 @@ public:
 		void ChangeAmmoType();
 
 	//
-	UFUNCTION(BlueprintCallable)
-		void Shoot();
+	UFUNCTION()
+		void Shoot(FVector const& SpawnLocation, FRotator const& SpawnRotation);
 
 	//
 	UFUNCTION(BlueprintCallable)
@@ -238,6 +250,10 @@ protected:
 	//////////////////////////////////////////////////////////////////////////
 
 private:
+
+	//
+	UPROPERTY()
+		ABaseCharacter* OwnerAsCharacter;
 
 	//
 	UFUNCTION()
