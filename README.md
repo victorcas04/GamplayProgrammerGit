@@ -10,12 +10,8 @@
  - LEFT CTRL:    crouch or slide (while running)
 
 ##### SHOOTPLAY
- - R:            reload (WIP)
+ - R:            reload
  - LEFT CLICK:   shoot
  - RIGHT CLICK:  zoom
-
-##### OTHER
- - E:            interact (WIP)
- - F:            use ability (WIP)
- - Q:            open gear wheel or change weapon (WIP)
+ - Q:            change weapon / ammo type (gear wheel)
  
