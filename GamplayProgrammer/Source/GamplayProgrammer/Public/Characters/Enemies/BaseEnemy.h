@@ -70,7 +70,7 @@ public:
 		int GetDamage();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetDamage(int newDamage);
 
 	//////////////////////////////////////////////////////////////////////////

@@ -115,7 +115,7 @@ public:
 		int GetDamage();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetDamage(int newDamage);
 
 	//
@@ -123,7 +123,7 @@ public:
 		float GetLifeTime();
 	
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetLifeTime(float newTimeOfLife);
 
 	//
@@ -131,7 +131,7 @@ public:
 		float GetLifeTimeRemaining();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetLifeTimeRemaining(float newTimeOfLifeRemaining);
 
 	//
@@ -139,7 +139,7 @@ public:
 		float GetFallOff();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetFallOff(float newFallOff);
 
 	//
@@ -147,7 +147,7 @@ public:
 		bool CheckCanBounce();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetCanBounce(bool newShouldBounce = true);
 
 	//
@@ -155,7 +155,7 @@ public:
 		int GetMaxBounces();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetMaxBounces(int newMaxBounces = 1);
 
 	//
@@ -167,7 +167,7 @@ public:
 		float GetExtraTimePerBounce();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetExtraTimePerBounce(float newExtraTimePerBounce = 1);
 
 	//
@@ -175,7 +175,7 @@ public:
 		bool CheckCanSelfDamage();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetCanSelfDamage(bool newCanSelfDamage = true);
 
 	//
@@ -183,7 +183,7 @@ public:
 		bool CheckCanStepOnIt();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetCanStepOnIt(bool newCanStepOnIt = true);
 
 	//
@@ -191,7 +191,7 @@ public:
 		bool CheckShouldBeDestroyedOncontact();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetShouldBeDestroyedOncontact(bool newShouldBeDestroyedOnContact = true);
 
 	//
@@ -199,7 +199,7 @@ public:
 		float GetProjectileSpeed();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetProjectileSpeed(float newProjectileSpeed);
 
 	//////////////////////////////////////////////////////////////////////////

@@ -93,7 +93,7 @@ void ABaseEnemy::CustomEnemyLoseHealth(int ammount)
 	if (tempCurrentHealth != GetCurrentHealth())
 	{
 		// here should go the call to play the hurt anim
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "enemy losing health anim...");
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "enemy losing health anim...");
 	}
 }
 
@@ -109,7 +109,7 @@ void ABaseEnemy::CustomEnemyDie()
 		SetIsDying();
 
 		// here should go the call to play death anim
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "enemy dying anim...");
+		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "enemy dying anim...");
 
 		Destroy();
 	}

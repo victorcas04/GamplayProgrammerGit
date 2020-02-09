@@ -532,6 +532,7 @@ void ABaseCharacter::RestartSliding()
 
 void ABaseCharacter::CharacterChangeAmmoType()
 {
+	CancelReload();
 	if (WeaponComponent)
 	{
 		WeaponComponent->ChangeAmmoType();
@@ -589,14 +590,15 @@ void ABaseCharacter::StartReloading()
 	{
 		SetIsReloading();
 		ZoomOut();
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "reloading anim...");
+
+		float TempReloadTime = WeaponComponent->GetReloadTime();
+		GEngine->AddOnScreenDebugMessage(-1, TempReloadTime, FColor::Yellow, "reloading anim...");
 		
 		if (WeaponComponent)
 		{
-			float TempReloadTime = WeaponComponent->GetReloadTime();
+			
 			if (TempReloadTime > 0.0f)
 			{
-				FTimerHandle ReloadHandle;
 				FTimerDelegate ReloadDelegate;
 				ReloadDelegate.BindUFunction(this, TEXT("StopReloading"));
 				GetWorld()->GetTimerManager().SetTimer(ReloadHandle, ReloadDelegate, TempReloadTime, false);
@@ -618,6 +620,16 @@ void ABaseCharacter::StopReloading()
 	}
 	if (CheckCanStopReloading())
 	{
+		SetIsReloading(false);
+	}
+}
+
+void ABaseCharacter::CancelReload()
+{
+	if (CheckCanStopReloading())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(ReloadHandle);
+		ReloadHandle.Invalidate();
 		SetIsReloading(false);
 	}
 }
@@ -645,14 +657,14 @@ void ABaseCharacter::CharacterShoot()
 				}
 				else
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Purple, "WARNING: not enough ammo.");
+					// if you try to shoot and have no ammo, you will start reloading
 					StartReloading();
 				}
 			}
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Projectile Class assigned.");
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Valid Ammo Type assigned.");
 		}
 	}
 	else
@@ -785,14 +797,7 @@ bool ABaseCharacter::CheckCanStartReloading()
 
 bool ABaseCharacter::CheckCanStopReloading()
 {
-	if (WeaponComponent)
-	{
-		return CheckIsReloading() && WeaponComponent->CheckIsAmmoFull();
-	}
-	else
-	{
-		return CheckIsReloading();
-	}
+	return CheckIsReloading();
 }
 
 //////////////////////////////////////////////////////////////////////////

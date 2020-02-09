@@ -77,13 +77,6 @@ void ABaseProjectile::StartAutodestroyTimer()
 	AutoDestroyHandle.Invalidate();
 	AutoDestroyDelegate.BindUFunction(this, TEXT("DestroyByTime"));
 
-	// this debug print should be a icon on the bomb to indicate the time
-	/*
-	FString TimeTillExplosionDebug = "Projectile Explosion in: ";
-	TimeTillExplosionDebug.Append(FString::FromInt(static_cast<int>(GetLifeTimeRemaining())));
-	TimeTillExplosionDebug.Append(" sec.");
-	GEngine->AddOnScreenDebugMessage(-1, 6.0f, FColor::Purple, TimeTillExplosionDebug);
-	*/
 	GetWorld()->GetTimerManager().SetTimer(AutoDestroyHandle, AutoDestroyDelegate, GetLifeTimeRemaining(), false);
 }
 

@@ -132,7 +132,7 @@ public:
 		UAnimMontage* GetFireAnimation();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetProjectileToSpawn(TSubclassOf<class ABaseProjectile> newProjectileToSpawn);
 
 	//
@@ -168,7 +168,7 @@ public:
 		int GetAmmoPerShot();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetAmmoPerShot(int newAmmoPerShot = 1);
 
 	//
@@ -176,7 +176,7 @@ public:
 		float GetReloadTime();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetReloadTime(float newReloadTime);
 
 	//
@@ -184,7 +184,7 @@ public:
 		float GetZoomInDelay();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetZoomInDelay(float newZoomInDelay);
 
 	//
@@ -192,7 +192,7 @@ public:
 		float GetZoomInMux();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetZoomInMux(float newZoomInMux);
 
 	//

@@ -20,10 +20,8 @@ void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//
 	SetupWpProperties();
 
-	//
 	OwnerAsCharacter = dynamic_cast<ABaseCharacter*>(GetOwner());
 }
 
@@ -34,6 +32,8 @@ ABaseCharacter * UWeaponComponent::GetOwnerAsCharacter()
 
 void UWeaponComponent::SetupWpProperties()
 {
+	SetCurrentAmmoPrimary(GetMaxAmmoPrimary());
+	SetCurrentAmmoSecondary(GetMaxAmmoSecondary());
 	if (CheckIsValidPrimaryAmmo())
 	{
 		ChangeAmmoToPrimary();
@@ -46,7 +46,6 @@ void UWeaponComponent::SetupWpProperties()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "ERROR: no Valid Ammo Type assigned on weapon.");
 	}
-	SetCurrentAmmo(GetMaxAmmoCurrent());
 }
 
 // WEAPON PROPERTIES STRUCT GETS AND SETS //////////////////////////////////////////////////////////////////////////
@@ -244,33 +243,41 @@ void UWeaponComponent::Shoot(FVector const& SpawnLocation, FRotator const& Spawn
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 		// spawn the projectile at the muzzle
-		ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(GetProjectileToSpawn(), SpawnLocation, SpawnRotation, ActorSpawnParams);
-		if (ProjectileSpawned)
+		TSubclassOf<ABaseProjectile> TempProjectileToSpawn = GetProjectileToSpawn();
+		if(TempProjectileToSpawn)
 		{
-			ProjectileSpawned->SetBaseChOwner(OwnerAsCharacter);
-		}
-
-		// try and play the sound if specified
-		if (GetFireSound())
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, GetFireSound(), OwnerAsCharacter->GetActorLocation());
-		}
-
-		// try and play a firing animation if specified
-		if (GetFireAnimation())
-		{
-			// Get the animation object for the arms mesh
-			if (OwnerAsCharacter)
+			ABaseProjectile* ProjectileSpawned = World->SpawnActor<ABaseProjectile>(TempProjectileToSpawn, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			if (ProjectileSpawned)
 			{
-				UAnimInstance* AnimInstance = OwnerAsCharacter->GetMesh1P()->GetAnimInstance();
-				if (AnimInstance)
+				ProjectileSpawned->SetBaseChOwner(OwnerAsCharacter);
+
+				// try and play the sound if specified
+				if (GetFireSound())
 				{
-					AnimInstance->Montage_Play(GetFireAnimation(), 1.f);
+					UGameplayStatics::PlaySoundAtLocation(this, GetFireSound(), OwnerAsCharacter->GetActorLocation());
 				}
+
+				// try and play a firing animation if specified
+				if (GetFireAnimation())
+				{
+					// Get the animation object for the arms mesh
+					if (OwnerAsCharacter)
+					{
+						UAnimInstance* AnimInstance = OwnerAsCharacter->GetMesh1P()->GetAnimInstance();
+						if (AnimInstance)
+						{
+							AnimInstance->Montage_Play(GetFireAnimation(), 1.f);
+						}
+					}
+				}
+
+				DecreaseCurrentAmmo(GetAmmoPerShot());
 			}
 		}
-
-		DecreaseCurrentAmmo(GetAmmoPerShot());
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "WARNING: no Projectile Class assigned.");
+		}
 	}
 }
 

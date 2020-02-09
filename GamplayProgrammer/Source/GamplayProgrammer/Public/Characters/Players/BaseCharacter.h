@@ -158,7 +158,7 @@ public:
 		float GetInvulnerableTime();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetInvulnerableTime(float newInvulnerableTime);
 
 	//
@@ -174,7 +174,7 @@ public:
 		float GetMaxSlidingTime();
 
 	//
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable)
 		void SetMaxSlidingTime(float newSlidingTime);
 
 	//
@@ -316,6 +316,10 @@ public:
 	//
 	UFUNCTION(BlueprintCallable)
 		void StopReloading();
+
+	//
+	UFUNCTION(BlueprintCallable)
+		void CancelReload();
 
 	/** Fires a projectile. */
 	UFUNCTION(BlueprintCallable)
@@ -498,6 +502,10 @@ protected:
 	//////////////////////////////////////////////////////////////////////////
 
 private:
+
+	//
+	UPROPERTY()
+		FTimerHandle ReloadHandle;
 
 	//
 	UPROPERTY()
