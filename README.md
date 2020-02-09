@@ -21,6 +21,5 @@
  
 ##### TODOs
  - HUD -> health + bullets
- - New map (gamemode)
+ - Map -> normal shoot + zoom + reload
  - Basic interact
- - Ability system
